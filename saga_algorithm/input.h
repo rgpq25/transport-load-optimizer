@@ -45,7 +45,6 @@ public:
     
     vector<Delivery> getAllDeliveriesFromOrders();
     vector<string> getUniqueDueDates();
-    vector<Delivery> filterDeliveriesByDate(string date);
 };
 
 #endif /* INPUT_H */

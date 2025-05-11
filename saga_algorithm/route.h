@@ -17,6 +17,8 @@ public:
     int getId() const;
     vector<RoutePoint>& getRoutePoints();
     const vector<RoutePoint>& getRoutePoints() const;
+    
+    vector<Client*> getClients() const;
 };
 
 #endif /* ROUTE_H */

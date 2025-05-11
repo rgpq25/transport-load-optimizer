@@ -8,6 +8,7 @@
       <itemPath>chromosome.h</itemPath>
       <itemPath>client.h</itemPath>
       <itemPath>delivery.h</itemPath>
+      <itemPath>deliveryUtils.h</itemPath>
       <itemPath>dispatchPlan.h</itemPath>
       <itemPath>gene.h</itemPath>
       <itemPath>input.h</itemPath>
@@ -38,7 +39,14 @@
         <itemPath>order.cpp</itemPath>
         <itemPath>route.cpp</itemPath>
         <itemPath>routePoint.cpp</itemPath>
+        <itemPath>timeSlot.cpp</itemPath>
+        <itemPath>timeSlot.h</itemPath>
         <itemPath>transportUnit.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="utils" projectFiles="true">
+        <itemPath>deliveryUtils.cpp</itemPath>
+        <itemPath>timeSlotUtils.cpp</itemPath>
+        <itemPath>timeSlotUtils.h</itemPath>
       </logicalFolder>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
@@ -80,6 +88,10 @@
       </item>
       <item path="delivery.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="deliveryUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="deliveryUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="dispatchPlan.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="dispatchPlan.h" ex="false" tool="3" flavor2="0">
@@ -109,6 +121,14 @@
       <item path="solution.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="solution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="timeSlot.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timeSlot.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="timeSlotUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timeSlotUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="transportUnit.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -151,6 +171,10 @@
       </item>
       <item path="delivery.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="deliveryUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="deliveryUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="dispatchPlan.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="dispatchPlan.h" ex="false" tool="3" flavor2="0">
@@ -180,6 +204,14 @@
       <item path="solution.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="solution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="timeSlot.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timeSlot.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="timeSlotUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timeSlotUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="transportUnit.cpp" ex="false" tool="1" flavor2="0">
       </item>

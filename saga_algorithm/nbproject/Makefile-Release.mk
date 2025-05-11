@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/chromosome.o \
 	${OBJECTDIR}/client.o \
 	${OBJECTDIR}/delivery.o \
+	${OBJECTDIR}/deliveryUtils.o \
 	${OBJECTDIR}/dispatchPlan.o \
 	${OBJECTDIR}/gene.o \
 	${OBJECTDIR}/input.o \
@@ -47,6 +48,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/route.o \
 	${OBJECTDIR}/routePoint.o \
 	${OBJECTDIR}/solution.o \
+	${OBJECTDIR}/timeSlot.o \
+	${OBJECTDIR}/timeSlotUtils.o \
 	${OBJECTDIR}/transportUnit.o
 
 
@@ -94,6 +97,11 @@ ${OBJECTDIR}/delivery.o: delivery.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/delivery.o delivery.cpp
 
+${OBJECTDIR}/deliveryUtils.o: deliveryUtils.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/deliveryUtils.o deliveryUtils.cpp
+
 ${OBJECTDIR}/dispatchPlan.o: dispatchPlan.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -133,6 +141,16 @@ ${OBJECTDIR}/solution.o: solution.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/solution.o solution.cpp
+
+${OBJECTDIR}/timeSlot.o: timeSlot.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/timeSlot.o timeSlot.cpp
+
+${OBJECTDIR}/timeSlotUtils.o: timeSlotUtils.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/timeSlotUtils.o timeSlotUtils.cpp
 
 ${OBJECTDIR}/transportUnit.o: transportUnit.cpp
 	${MKDIR} -p ${OBJECTDIR}

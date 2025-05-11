@@ -205,11 +205,9 @@ vector<Order>& Input::getOrders() {
 vector<Delivery> Input::getAllDeliveriesFromOrders() {
     vector<Delivery> allDeliveries;
 
-    for(int i=0; i < this->orders.size(); i++) {
-        vector<Delivery>& currDeliveries = this->orders[i].getDeliveries();
-        for(int j=0; j < currDeliveries.size(); j++) {
-            Delivery& currDelivery = currDeliveries[j];
-            allDeliveries.push_back(currDelivery);
+    for(const Order& order : this->orders) {
+        for (const Delivery& delivery : order.getDeliveries()) {
+            allDeliveries.push_back(delivery);
         }
     }
     
@@ -227,18 +225,4 @@ vector<string> Input::getUniqueDueDates() {
     
     vector<string> uniqueDueDatesVector(uniqueDueDates.begin(), uniqueDueDates.end());
     return uniqueDueDatesVector;
-}
-
-vector<Delivery> Input::filterDeliveriesByDate(string date) {
-    vector<Delivery> allDeliveries = getAllDeliveriesFromOrders();
-    vector<Delivery> filteredDeliveries;
-    
-    for(int i=0; i < allDeliveries.size(); i++) {
-        Delivery currDelivery = allDeliveries[i];
-        if(currDelivery.getDueDate() == date) {
-            filteredDeliveries.push_back(currDelivery);
-        }
-    }
-    
-    return filteredDeliveries;
 }

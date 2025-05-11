@@ -1,4 +1,5 @@
 #include "route.h"
+#include "iostream"
 
 Route::Route() {
 }
@@ -18,4 +19,14 @@ vector<RoutePoint>& Route::getRoutePoints() {
 
 const vector<RoutePoint>& Route::getRoutePoints() const {
     return routePoints;
+}
+
+
+
+vector<Client*> Route::getClients() const {
+    vector<Client*> clients;
+    for (const RoutePoint& rp : this->routePoints) {
+        clients.push_back(rp.getClient());
+    }
+    return clients;
 }
