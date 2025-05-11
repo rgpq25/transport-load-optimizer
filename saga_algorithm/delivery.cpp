@@ -1,13 +1,15 @@
 #include "delivery.h"
+#include "order.h"
 
 Delivery::Delivery() {
 }
 
-Delivery::Delivery(int id, const string& shift, const string& dueDate, vector<Block*>& blocksToDeliver) {
+Delivery::Delivery(int id, const string& shift, const string& dueDate, vector<Block*>& blocksToDeliver, Order* parentOrder) {
     this->id = id;
     this->shift = shift;
     this->dueDate = dueDate;
     this->blocksToDeliver = blocksToDeliver;
+    this->parentOrder = parentOrder;
 }
 
 
@@ -39,4 +41,19 @@ vector<Block*>& Delivery::getBlocksToDeliver() {
 
 const vector<Block*>& Delivery::getBlocksToDeliver() const {
     return blocksToDeliver;
+}
+
+void Delivery::setParentOrder(Order* parentOrder) {
+    this->parentOrder = parentOrder;
+}
+
+
+
+
+int Delivery::getPriority() const {
+    return parentOrder->getPriority();
+}
+
+Client* Delivery::getClient() const {
+    return parentOrder->getClient();
 }

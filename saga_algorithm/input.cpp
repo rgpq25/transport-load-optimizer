@@ -115,10 +115,15 @@ void Input::loadFromFile(const string& filePath) {
                         blocksToDeliver.push_back(blockMap[blockId]);
                     }
                 }
-                deliveries.emplace_back(deliveryId, shift, dueDate, blocksToDeliver);
+                deliveries.emplace_back(deliveryId, shift, dueDate, blocksToDeliver, nullptr);
             }
             if (clientMap.find(clientId) != clientMap.end()) {
                 orders.emplace_back(orderId, clientMap[clientId], priority, deliveries);
+                
+                Order* newOrderPtr = &orders.back();
+                for (Delivery& d : newOrderPtr->getDeliveries()) {
+                    d.setParentOrder(newOrderPtr);
+                }
             }
         }
     }
