@@ -1,0 +1,4 @@
+# For both C++ projects
+build
+dist
+.dep.inc

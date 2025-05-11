@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>block.h</itemPath>
+      <itemPath>chromosome.h</itemPath>
+      <itemPath>client.h</itemPath>
+      <itemPath>delivery.h</itemPath>
+      <itemPath>dispatchPlan.h</itemPath>
+      <itemPath>gene.h</itemPath>
+      <itemPath>input.h</itemPath>
+      <itemPath>order.h</itemPath>
+      <itemPath>route.h</itemPath>
+      <itemPath>routePoint.h</itemPath>
+      <itemPath>solution.h</itemPath>
+      <itemPath>transportUnit.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="f2" displayName="algorithm" projectFiles="true">
+        <itemPath>chromosome.cpp</itemPath>
+        <itemPath>dispatchPlan.cpp</itemPath>
+        <itemPath>gene.cpp</itemPath>
+        <itemPath>solution.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f1" displayName="data_structures" projectFiles="true">
+        <itemPath>block.cpp</itemPath>
+        <itemPath>client.cpp</itemPath>
+        <itemPath>delivery.cpp</itemPath>
+        <itemPath>input.cpp</itemPath>
+        <itemPath>order.cpp</itemPath>
+        <itemPath>route.cpp</itemPath>
+        <itemPath>routePoint.cpp</itemPath>
+        <itemPath>transportUnit.cpp</itemPath>
+      </logicalFolder>
+      <itemPath>main.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+      </compileType>
+      <item path="block.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="block.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="chromosome.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="chromosome.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="client.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="delivery.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="delivery.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatchPlan.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatchPlan.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="gene.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="gene.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="input.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="input.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="order.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="order.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="route.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="route.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="routePoint.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="routePoint.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="solution.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="solution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="transportUnit.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="transportUnit.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+      </compileType>
+      <item path="block.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="block.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="chromosome.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="chromosome.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="client.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="client.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="delivery.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="delivery.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatchPlan.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatchPlan.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="gene.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="gene.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="input.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="input.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="order.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="order.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="route.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="route.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="routePoint.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="routePoint.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="solution.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="solution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="transportUnit.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="transportUnit.h" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
