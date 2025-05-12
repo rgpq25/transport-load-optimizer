@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/SAGAOptimizer.o \
 	${OBJECTDIR}/block.o \
 	${OBJECTDIR}/chromosome.o \
 	${OBJECTDIR}/client.o \
@@ -76,6 +77,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/saga_algorithm.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/saga_algorithm ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/SAGAOptimizer.o: SAGAOptimizer.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SAGAOptimizer.o SAGAOptimizer.cpp
 
 ${OBJECTDIR}/block.o: block.cpp
 	${MKDIR} -p ${OBJECTDIR}

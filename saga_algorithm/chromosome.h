@@ -19,14 +19,14 @@ using namespace std;
 
 class Chromosome {
 private:
-    vector<int> orderAssignments;
+    vector<int> deliveryAssignments;
     vector<int> boxOrientations;
     double fitness;
 public:
     Chromosome();
-    Chromosome(vector<int> orderAssignments, vector<int> boxOrientations);
+    Chromosome(vector<int> deliveryAssignments, vector<int> boxOrientations);
 
-    vector<int>& getOrderAssignments();
+    vector<int>& getDeliveryAssignments();
     vector<int>& getBoxOrientations();
     double getFitness() const;
     void setFitness(double f);

@@ -27,6 +27,8 @@
                    displayName="Source Files"
                    projectFiles="true">
       <logicalFolder name="f2" displayName="algorithm" projectFiles="true">
+        <itemPath>SAGAOptimizer.cpp</itemPath>
+        <itemPath>SAGAOptimizer.h</itemPath>
         <itemPath>chromosome.cpp</itemPath>
         <itemPath>dispatchPlan.cpp</itemPath>
         <itemPath>gene.cpp</itemPath>
@@ -72,6 +74,10 @@
       </toolsSet>
       <compileType>
       </compileType>
+      <item path="SAGAOptimizer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SAGAOptimizer.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="block.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="block.h" ex="false" tool="3" flavor2="0">
@@ -155,6 +161,10 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="SAGAOptimizer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SAGAOptimizer.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="block.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="block.h" ex="false" tool="3" flavor2="0">

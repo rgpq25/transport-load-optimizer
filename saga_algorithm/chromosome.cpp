@@ -4,14 +4,14 @@ Chromosome::Chromosome() {
     this->fitness = 0;
 }
 
-Chromosome::Chromosome(vector<int> orderAssignments, vector<int> boxOrientations) {
-    this->orderAssignments = orderAssignments;
+Chromosome::Chromosome(vector<int> deliveryAssignments, vector<int> boxOrientations) {
+    this->deliveryAssignments = deliveryAssignments;
     this->boxOrientations = boxOrientations;
     this->fitness = 0;
 }
 
-vector<int>& Chromosome::getOrderAssignments() {
-    return orderAssignments;
+vector<int>& Chromosome::getDeliveryAssignments() {
+    return deliveryAssignments;
 }
 
 vector<int>& Chromosome::getBoxOrientations() {
