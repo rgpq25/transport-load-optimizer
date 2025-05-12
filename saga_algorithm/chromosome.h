@@ -13,17 +13,23 @@
 #ifndef CHROMOSOME_H
 #define CHROMOSOME_H
 
-#include "gene.h"
-#include "dispatchPlan.h"
 #include <vector>
+
+using namespace std;
 
 class Chromosome {
 private:
-    vector<Gene> genes;
-    vector<DispatchPlan> dispatchPlans;
+    vector<int> orderAssignments;
+    vector<int> boxOrientations;
     double fitness;
 public:
     Chromosome();
+    Chromosome(vector<int> orderAssignments, vector<int> boxOrientations);
+
+    vector<int>& getOrderAssignments();
+    vector<int>& getBoxOrientations();
+    double getFitness() const;
+    void setFitness(double f);
 };
 
 #endif /* CHROMOSOME_H */

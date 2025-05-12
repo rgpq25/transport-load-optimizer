@@ -16,6 +16,7 @@
       <itemPath>route.h</itemPath>
       <itemPath>routePoint.h</itemPath>
       <itemPath>solution.h</itemPath>
+      <itemPath>timeSlotUtils.h</itemPath>
       <itemPath>transportUnit.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -46,7 +47,6 @@
       <logicalFolder name="f3" displayName="utils" projectFiles="true">
         <itemPath>deliveryUtils.cpp</itemPath>
         <itemPath>timeSlotUtils.cpp</itemPath>
-        <itemPath>timeSlotUtils.h</itemPath>
       </logicalFolder>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
