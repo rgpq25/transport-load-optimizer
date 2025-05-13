@@ -7,6 +7,8 @@
 #include "client.h"
 #include "input.h"
 #include "timeSlot.h"
+
+#include "SAGAOptimizer.h"
 #include "globalExecutionTracker.h"
 
 #include "deliveryUtils.h"
@@ -31,8 +33,10 @@ int main(int argc, char** argv) {
     int timeSlotInterval = 30;
     
     Input input;
-    input.loadFromFile("data.txt");
-    //input.printInputData();
+    input.loadFromFile("datasets/input.txt");
+    input.printInputData();
+    
+    //return 0;
     
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
@@ -93,7 +97,10 @@ int main(int argc, char** argv) {
                     if (blocksForThisBatch.empty()) continue;
 
                     // 3. Filter available vehicles for this time slot
-                    vector<TransportUnit*> allVehicles = input.getTransportUnits();
+                    vector<TransportUnit*> allVehicles;
+                    for (TransportUnit& unit : input.getTransportUnits()) {
+                        allVehicles.push_back(&unit);
+                    }
                     vector<TransportUnit*> availableVehicles = tracker.getAvailableVehicles(allVehicles, ts);
                     if (availableVehicles.empty()) continue;
 
@@ -115,6 +122,7 @@ int main(int argc, char** argv) {
                     
                     cout << " Best solution found with fitness: " << best.getFitness() << endl;
 
+                    return 0;   // Finsh the iteration prematurely to check if everything was done correctly
                 }
             }
         }

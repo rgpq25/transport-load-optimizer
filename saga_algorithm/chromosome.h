@@ -26,6 +26,8 @@ public:
     Chromosome();
     Chromosome(vector<int> deliveryAssignments, vector<int> boxOrientations);
 
+    const vector<int>& getDeliveryAssignments() const;
+    const vector<int>& getBoxOrientations() const;
     vector<int>& getDeliveryAssignments();
     vector<int>& getBoxOrientations();
     double getFitness() const;

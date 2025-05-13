@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>SAGAOptimizer.h</itemPath>
       <itemPath>block.h</itemPath>
       <itemPath>chromosome.h</itemPath>
       <itemPath>client.h</itemPath>
@@ -11,6 +12,7 @@
       <itemPath>deliveryUtils.h</itemPath>
       <itemPath>dispatchPlan.h</itemPath>
       <itemPath>gene.h</itemPath>
+      <itemPath>globalExecutionTracker.h</itemPath>
       <itemPath>input.h</itemPath>
       <itemPath>order.h</itemPath>
       <itemPath>route.h</itemPath>
@@ -28,12 +30,10 @@
                    projectFiles="true">
       <logicalFolder name="f2" displayName="algorithm" projectFiles="true">
         <itemPath>SAGAOptimizer.cpp</itemPath>
-        <itemPath>SAGAOptimizer.h</itemPath>
         <itemPath>chromosome.cpp</itemPath>
         <itemPath>dispatchPlan.cpp</itemPath>
         <itemPath>gene.cpp</itemPath>
         <itemPath>globalExecutionTracker.cpp</itemPath>
-        <itemPath>globalExecutionTracker.h</itemPath>
         <itemPath>solution.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="data_structures" projectFiles="true">

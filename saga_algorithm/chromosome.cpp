@@ -10,18 +10,26 @@ Chromosome::Chromosome(vector<int> deliveryAssignments, vector<int> boxOrientati
     this->fitness = 0;
 }
 
+const vector<int>& Chromosome::getDeliveryAssignments() const {
+    return this->deliveryAssignments;
+}
+
+const vector<int>& Chromosome::getBoxOrientations() const {
+    return this->boxOrientations;
+}
+
 vector<int>& Chromosome::getDeliveryAssignments() {
-    return deliveryAssignments;
+    return this->deliveryAssignments;
 }
 
 vector<int>& Chromosome::getBoxOrientations() {
-    return boxOrientations;
+    return this->boxOrientations;
 }
 
 double Chromosome::getFitness() const {
-    return fitness;
+    return this->fitness;
 }
 
 void Chromosome::setFitness(double f) {
-    fitness = f;
+    this->fitness = f;
 }
