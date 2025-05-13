@@ -55,15 +55,20 @@ void GlobalExecutionTracker::recordSolution(
 
     // Register deliveries and their vehicle usage
     for (int i = 0; i < deliveries.size(); ++i) {
-        markDeliveryFulfilled(deliveries[i]->getId());
         int vehicleIndex = deliveryAssignments[i];
-        if (vehicleIndex >= 0 && vehicleIndex < vehicles.size()) {
-            reserveVehicle(vehicles[vehicleIndex]->getId(), slot);
+        if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
+
+        markDeliveryFulfilled(deliveries[i]->getId());
+        reserveVehicle(vehicles[vehicleIndex]->getId(), slot);
+        
+        const std::vector<Block*>& bs = deliveries[i]->getBlocksToDeliver();
+        for (Block* b : bs) {
+            markBlockUsed(b->getId());
         }
     }
 
     // Register used blocks
-    for (int i = 0; i < blocks.size(); ++i) {
-        markBlockUsed(blocks[i]->getId());
-    }
+    //for (int i = 0; i < blocks.size(); ++i) {
+    //    markBlockUsed(blocks[i]->getId());
+    //}
 }

@@ -49,13 +49,15 @@ Chromosome SAGAOptimizer::run() {
     // 1. Evaluate initial fitness
     for (Chromosome& chromosome : population) {
         double currFitness = evaluateFitness(chromosome);
+        /*
         cout << "Chromosome =========" << endl;
         cout << "[";
         for(const int number : chromosome.getDeliveryAssignments()) {
             cout << number << ",";
         }
         cout << "]" << endl;
-        cout << "Assigning " << currFitness << " fitness." << endl;
+        */
+        //cout << "Assigning " << currFitness << " fitness." << endl;
         chromosome.setFitness(currFitness);
     }
 
@@ -125,7 +127,7 @@ vector<Chromosome> SAGAOptimizer::generateInitialPopulation() {
         // --- 1. Random delivery-to-vehicle assignment ---
         vector<int> deliveryAssignments;
         for (int d = 0; d < numDeliveries; ++d) {
-            int assignedVehicle = rand() % numVehicles;
+            int assignedVehicle = (rand() % (numVehicles + 1)) - 1; // Gives range: [-1, 0, ..., numVehicles - 1]
             deliveryAssignments.push_back(assignedVehicle);
         }
 
@@ -156,18 +158,21 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     unordered_map<int, double> vehicleVolumeUsed;
     unordered_map<int, double> vehicleWeightUsed;
     unordered_set<int> usedVehicles;
+    
+    int numDeliveriesAssigned = 0;
 
     // Go through all deliveries and assign their blocks to the vehicle assigned
     for (int i = 0; i < deliveries.size(); ++i) {
         int vehicleIndex = deliveryAssignments[i];
         if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
+        
+        numDeliveriesAssigned++;
 
         Delivery* d = deliveries[i];
         const vector<Block*>& dBlocks = d->getBlocksToDeliver();
 
         for (Block* b : dBlocks) {
             vehicleBlocks[vehicleIndex].push_back(b);
-
             double volume = b->getHeight() * b->getWidth() * b->getLength();
             vehicleVolumeUsed[vehicleIndex] += volume;
             vehicleWeightUsed[vehicleIndex] += b->getWeight();
@@ -199,15 +204,20 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
 
     int numVehiclesUsed = usedVehicles.size();
     double avgUtilization = usedVehicles.empty() ? 0.0 : totalUtilizationScore / numVehiclesUsed;
+    double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
 
     // Simple fitness function (can be tuned)
     double A = 0.5;  // minimize truck count
     double B = 0.5;  // maximize volume utilization
     double C = 1.0;  // penalty factor
+    double D = 1.0;  // reward for fulfilling deliveries
+    
+    double truckScore = (vehicles.empty()) ? 0.0 : (1.0 - (double(numVehiclesUsed) / vehicles.size()));
 
-    double fitness = A * (1.0 - (double(numVehiclesUsed) / vehicles.size())) +
+    double fitness = A * truckScore +
                      B * avgUtilization -
-                     C * overcapacityPenalty;
+                     C * overcapacityPenalty +
+                     D * fulfillmentRatio;
 
     return fitness;
 }
