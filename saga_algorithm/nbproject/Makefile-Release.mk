@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/deliveryUtils.o \
 	${OBJECTDIR}/dispatchPlan.o \
 	${OBJECTDIR}/gene.o \
+	${OBJECTDIR}/globalExecutionTracker.o \
 	${OBJECTDIR}/input.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/order.o \
@@ -117,6 +118,11 @@ ${OBJECTDIR}/gene.o: gene.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gene.o gene.cpp
+
+${OBJECTDIR}/globalExecutionTracker.o: globalExecutionTracker.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/globalExecutionTracker.o globalExecutionTracker.cpp
 
 ${OBJECTDIR}/input.o: input.cpp
 	${MKDIR} -p ${OBJECTDIR}

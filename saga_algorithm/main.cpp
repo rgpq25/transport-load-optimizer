@@ -1,11 +1,13 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
 #include "block.h"
 #include "transportUnit.h"
 #include "client.h"
 #include "input.h"
 #include "timeSlot.h"
-#include <iostream>
-#include <vector>
-#include <string>
+#include "globalExecutionTracker.h"
 
 #include "deliveryUtils.h"
 #include "timeSlotUtils.h"
@@ -34,6 +36,7 @@ int main(int argc, char** argv) {
     
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
+    GlobalExecutionTracker tracker;
     vector<string> uniqueDueDates = input.getUniqueDueDates();
     vector<Delivery> deliveries = input.getAllDeliveriesFromOrders();
     
@@ -67,14 +70,56 @@ int main(int argc, char** argv) {
                          << ", pedidos: " << deliveriesByShift.size() << endl;
 
                     // Empezamos con optimizacion SA-GA
+                    
+                    // 1. Filter deliveries by tracker
+                    vector<Delivery*> deliveryPtrs;
+                    for (Delivery& d : deliveriesByShift) {
+                        if (!tracker.isDeliveryFulfilled(d.getId())) {
+                            deliveryPtrs.push_back(&d);
+                        }
+                    }
+                    if (deliveryPtrs.empty()) continue;
+
+                    // 2. Filter blocks (only those not already used)
+                    vector<Block*> blocksForThisBatch;
+                    for (Delivery* d : deliveryPtrs) {
+                        const vector<Block*>& bs = d->getBlocksToDeliver();
+                        for (Block* b : bs) {
+                            if (!tracker.isBlockUsed(b->getId())) {
+                                blocksForThisBatch.push_back(b);
+                            }
+                        }
+                    }
+                    if (blocksForThisBatch.empty()) continue;
+
+                    // 3. Filter available vehicles for this time slot
+                    vector<TransportUnit*> allVehicles = input.getTransportUnits();
+                    vector<TransportUnit*> availableVehicles = tracker.getAvailableVehicles(allVehicles, ts);
+                    if (availableVehicles.empty()) continue;
+
+                    // 4. Create and run optimizer
+                    SAGAOptimizer optimizer(
+                        deliveryPtrs,
+                        blocksForThisBatch,
+                        availableVehicles,
+                        const_cast<Route*>(&route),
+                        ts,
+                        /*T_init=*/1000, 
+                        /*T_min=*/1, 
+                        /*alpha=*/0.95, 
+                        /*populationSize=*/30
+                    );
+
+                    Chromosome best = optimizer.run();
+                    tracker.recordSolution(best, deliveryPtrs, blocksForThisBatch, availableVehicles, ts);
+                    
+                    cout << " Best solution found with fitness: " << best.getFitness() << endl;
+
                 }
             }
-
-            
         }
     }
 
-    
     return 0;
 }
 
