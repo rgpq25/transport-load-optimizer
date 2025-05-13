@@ -41,15 +41,12 @@ OBJECTFILES= \
 	${OBJECTDIR}/client.o \
 	${OBJECTDIR}/delivery.o \
 	${OBJECTDIR}/deliveryUtils.o \
-	${OBJECTDIR}/dispatchPlan.o \
-	${OBJECTDIR}/gene.o \
 	${OBJECTDIR}/globalExecutionTracker.o \
 	${OBJECTDIR}/input.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/order.o \
 	${OBJECTDIR}/route.o \
 	${OBJECTDIR}/routePoint.o \
-	${OBJECTDIR}/solution.o \
 	${OBJECTDIR}/timeSlot.o \
 	${OBJECTDIR}/timeSlotUtils.o \
 	${OBJECTDIR}/transportUnit.o
@@ -109,16 +106,6 @@ ${OBJECTDIR}/deliveryUtils.o: deliveryUtils.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/deliveryUtils.o deliveryUtils.cpp
 
-${OBJECTDIR}/dispatchPlan.o: dispatchPlan.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/dispatchPlan.o dispatchPlan.cpp
-
-${OBJECTDIR}/gene.o: gene.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/gene.o gene.cpp
-
 ${OBJECTDIR}/globalExecutionTracker.o: globalExecutionTracker.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -148,11 +135,6 @@ ${OBJECTDIR}/routePoint.o: routePoint.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/routePoint.o routePoint.cpp
-
-${OBJECTDIR}/solution.o: solution.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/solution.o solution.cpp
 
 ${OBJECTDIR}/timeSlot.o: timeSlot.cpp
 	${MKDIR} -p ${OBJECTDIR}

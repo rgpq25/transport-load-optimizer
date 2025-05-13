@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
                     
                     cout << " Best solution found with fitness: " << best.getFitness() << endl;
 
-                    return 0;   // Finsh the iteration prematurely to check if everything was done correctly
+                    //return 0;   // Finsh the iteration prematurely to check if everything was done correctly
                 }
             }
         }
