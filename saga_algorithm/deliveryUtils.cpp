@@ -19,7 +19,7 @@ namespace DeliveryUtils {
     vector<Delivery*> filterByShift(const vector<Delivery*>& deliveries, const string& shift) {
         vector<Delivery*> result;
         for (Delivery* d : deliveries) {
-            if (d->getShift() == shift) {
+            if (d->getShift() == shift or d->getShift() == "null") {
                 result.push_back(d);
             }
         }

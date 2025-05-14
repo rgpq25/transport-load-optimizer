@@ -30,6 +30,7 @@ private:
     string date;
     vector<Delivery*> deliveries;
     vector<Block*> blocks;
+    vector<int> blockOrientations;
 
 public:
     Dispatch(
@@ -38,7 +39,8 @@ public:
         TimeSlot slot, 
         const string& date,
         const vector<Delivery*>& deliveries, 
-        const vector<Block*>& blocks
+        const vector<Block*>& blocks,
+        const vector<int>& blockOrientations
     );
 
     void printSummary() const;

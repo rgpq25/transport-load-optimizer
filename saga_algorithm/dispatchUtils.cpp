@@ -32,22 +32,19 @@ namespace DispatchUtils {
             int vIdx = entry.first;
             TransportUnit* truck = vehicles[vIdx];
             
+            vector<int> blockOrientations = chromosome.getAssignedBoxOrientations(vIdx, deliveries);
+            //VERIFY THE ABOVE LINE, IS IT WORKING CORRECTLY?
+            
             Dispatch dispatch(
                 truck,
                 route,
                 slot,
                 date,
                 deliveriesByVehicle[vIdx],
-                blocksByVehicle[vIdx]
+                blocksByVehicle[vIdx],
+                blockOrientations
             );
             
-            for (Delivery* d : deliveriesByVehicle[vIdx]) {
-                cout << "[DEBUG] Added delivery ID to Dispatch: " << d->getId() << endl;
-            }
-            for (Block* b : blocksByVehicle[vIdx]) {
-                cout << "[DEBUG] Added block ID to Dispatch: " << b->getId() << endl;
-            }
-
             result.push_back(dispatch);
         }
         

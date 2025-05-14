@@ -49,15 +49,6 @@ Chromosome SAGAOptimizer::run() {
     // 1. Evaluate initial fitness
     for (Chromosome& chromosome : population) {
         double currFitness = evaluateFitness(chromosome);
-        /*
-        cout << "Chromosome =========" << endl;
-        cout << "[";
-        for(const int number : chromosome.getDeliveryAssignments()) {
-            cout << number << ",";
-        }
-        cout << "]" << endl;
-        */
-        //cout << "Assigning " << currFitness << " fitness." << endl;
         chromosome.setFitness(currFitness);
     }
 

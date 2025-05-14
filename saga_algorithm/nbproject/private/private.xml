@@ -8,14 +8,13 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/dispatchUtils.cpp</file>
-            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/deliveryUtils.cpp</file>
-            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/deliveryUtils.h</file>
             <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/dispatch.h</file>
-            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/input.cpp</file>
-            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/input.h</file>
+            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/SAGAOptimizer.cpp</file>
+            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/globalExecutionTracker.cpp</file>
             <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/dispatch.cpp</file>
             <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/main.cpp</file>
-            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/delivery.cpp</file>
+            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/chromosome.cpp</file>
+            <file>file:/C:/main/university/semesters/CICLO%20XII/TESIS2/main_repository/saga_algorithm/chromosome.h</file>
         </group>
     </open-files>
 </project-private>

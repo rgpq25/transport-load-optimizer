@@ -66,9 +66,4 @@ void GlobalExecutionTracker::recordSolution(
             markBlockUsed(b->getId());
         }
     }
-
-    // Register used blocks
-    //for (int i = 0; i < blocks.size(); ++i) {
-    //    markBlockUsed(blocks[i]->getId());
-    //}
 }

@@ -25,6 +25,13 @@
  * time window form today.
  */
 
+/*
+ TODOS:
+ * - Actually check for block availability from the inputs when generating a new solution
+ * - Confirm if null time window deliveries can be attended before the due date.
+ * - Get a better and bigger randomized dataset
+ */
+
 using namespace std;
 
 int main(int argc, char** argv) {
@@ -32,10 +39,10 @@ int main(int argc, char** argv) {
     int timeSlotInterval = 30;
     
     Input input;
-    input.loadFromFile("datasets/input.txt");
+    input.loadFromFile("datasets/input1.txt");
     input.printInputData();
     
-    cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
+    //cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
     GlobalExecutionTracker tracker;
     vector<Dispatch> finalDispatches;
@@ -46,7 +53,7 @@ int main(int argc, char** argv) {
         for(const Route& route : input.getRoutes()) {
             vector<Delivery*> deliveriesForRoute = DeliveryUtils::filterByDateAndRoute(deliveries, dueDate, route);
             
-            vector<string> shifts = {"morning", "afternoon", "null"};
+            vector<string> shifts = {"morning", "afternoon"};
             for (const string& shift : shifts) {                
                 vector<Delivery*> deliveriesByShift = DeliveryUtils::filterByShift(deliveriesForRoute, shift);
 
@@ -57,19 +64,19 @@ int main(int argc, char** argv) {
                     timeSlots = TimeSlotUtils::generateForWindow(480, 720, route, unloadingTime, timeSlotInterval); // 08:00 – 12:00
                 } else if (shift == "afternoon") {
                     timeSlots = TimeSlotUtils::generateForWindow(840, 1080, route, unloadingTime, timeSlotInterval); // 14:00 – 18:00
-                } else {
-                    timeSlots = TimeSlotUtils::generateForWindow(480, 1080, route, unloadingTime, timeSlotInterval); // full day (null shift)
                 }
 
                 for (const TimeSlot& ts : timeSlots) {
                     //vector<Delivery> elegibles = DeliveryUtils::filterByWindow(deliveriesByShift, ts, route); //this will be included if we deliver "null" shift delveries early (TODO)
                     //if (elegibles.empty()) continue;
 
+                    /*
                     cout << endl << "→ Ejecutando SA-GA para fecha: " << dueDate
                          << ", ruta: " << route.getId()
                          << ", shift: " << shift
                          << ", time slot: " << ts.getStartAsString() << " - " << ts.getEndAsString()
                          << ", pedidos: " << deliveriesByShift.size() << endl;
+                    */
                     
                     // 1. Filter deliveries by tracker
                     vector<Delivery*> deliveryPtrs;
@@ -116,7 +123,7 @@ int main(int argc, char** argv) {
                     Chromosome best = optimizer.run();
                     tracker.recordSolution(best, deliveryPtrs, blocksForThisBatch, availableVehicles, ts);
                     
-                    cout << " Best solution found with fitness: " << best.getFitness() << endl;
+                    //cout << " Best solution found with fitness: " << best.getFitness() << endl;
 
                     vector<Dispatch> dispatches = DispatchUtils::buildFromChromosome(
                         best, 

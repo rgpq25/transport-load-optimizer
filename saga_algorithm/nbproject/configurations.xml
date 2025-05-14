@@ -10,12 +10,14 @@
       <itemPath>client.h</itemPath>
       <itemPath>delivery.h</itemPath>
       <itemPath>deliveryUtils.h</itemPath>
+      <itemPath>dispatch.h</itemPath>
       <itemPath>dispatchUtils.h</itemPath>
       <itemPath>globalExecutionTracker.h</itemPath>
       <itemPath>input.h</itemPath>
       <itemPath>order.h</itemPath>
       <itemPath>route.h</itemPath>
       <itemPath>routePoint.h</itemPath>
+      <itemPath>timeSlot.h</itemPath>
       <itemPath>timeSlotUtils.h</itemPath>
       <itemPath>transportUnit.h</itemPath>
     </logicalFolder>
@@ -36,13 +38,11 @@
         <itemPath>client.cpp</itemPath>
         <itemPath>delivery.cpp</itemPath>
         <itemPath>dispatch.cpp</itemPath>
-        <itemPath>dispatch.h</itemPath>
         <itemPath>input.cpp</itemPath>
         <itemPath>order.cpp</itemPath>
         <itemPath>route.cpp</itemPath>
         <itemPath>routePoint.cpp</itemPath>
         <itemPath>timeSlot.cpp</itemPath>
-        <itemPath>timeSlot.h</itemPath>
         <itemPath>transportUnit.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="utils" projectFiles="true">

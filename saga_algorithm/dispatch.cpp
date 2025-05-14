@@ -7,7 +7,8 @@ Dispatch::Dispatch(
     TimeSlot slot,
     const string& date,
     const vector<Delivery*>& deliveries,
-    const vector<Block*>& blocks
+    const vector<Block*>& blocks,
+    const vector<int>& blockOrientations
 ) {
     this->truck = truck;
     this->route = route;
@@ -15,10 +16,10 @@ Dispatch::Dispatch(
     this->date = date;
     this->deliveries = deliveries;
     this->blocks = blocks;
+    this->blockOrientations = blockOrientations;
 }
 
 void Dispatch::printSummary() const {
-    cout << "==== Dispatch Summary ====" << endl;
     cout << "Truck ID: " << truck->getId() << endl;
     cout << "Date: " << date << endl;
     cout << "Time Slot: " << slot.getStartAsString() << " - " << slot.getEndAsString() << endl;
@@ -31,6 +32,9 @@ void Dispatch::printSummary() const {
     
     cout << "\nBlocks (" << blocks.size() << "): ";
     for (const Block* b : blocks) cout << b->getId() << " ";
+    
+    cout << "\nOrientations (" << blockOrientations.size() << "): ";
+    for (const int b : blockOrientations) cout << b << " ";
 
     cout << endl << "==========================" << endl;
 }
