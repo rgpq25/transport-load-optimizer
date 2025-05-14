@@ -202,12 +202,12 @@ vector<Order>& Input::getOrders() {
 
 
 
-vector<Delivery> Input::getAllDeliveriesFromOrders() {
-    vector<Delivery> allDeliveries;
+vector<Delivery*> Input::getAllDeliveriesFromOrders() {
+    vector<Delivery*> allDeliveries;
 
-    for(const Order& order : this->orders) {
-        for (const Delivery& delivery : order.getDeliveries()) {
-            allDeliveries.push_back(delivery);
+    for(Order& order : this->orders) {
+        for (Delivery& delivery : order.getDeliveries()) {
+            allDeliveries.push_back(&delivery);
         }
     }
     
@@ -215,12 +215,12 @@ vector<Delivery> Input::getAllDeliveriesFromOrders() {
 }
 
 vector<string> Input::getUniqueDueDates() {
-    vector<Delivery> allDeliveries = getAllDeliveriesFromOrders();
+    vector<Delivery*> allDeliveries = getAllDeliveriesFromOrders();
  
     set<string> uniqueDueDates;
     for(int i=0; i < allDeliveries.size(); i++) {
-        Delivery currDelivery = allDeliveries[i];
-        uniqueDueDates.insert(currDelivery.getDueDate());
+        Delivery* currDelivery = allDeliveries[i];
+        uniqueDueDates.insert(currDelivery->getDueDate());
     }
     
     vector<string> uniqueDueDatesVector(uniqueDueDates.begin(), uniqueDueDates.end());

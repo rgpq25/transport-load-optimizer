@@ -41,6 +41,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/client.o \
 	${OBJECTDIR}/delivery.o \
 	${OBJECTDIR}/deliveryUtils.o \
+	${OBJECTDIR}/dispatch.o \
+	${OBJECTDIR}/dispatchUtils.o \
 	${OBJECTDIR}/globalExecutionTracker.o \
 	${OBJECTDIR}/input.o \
 	${OBJECTDIR}/main.o \
@@ -105,6 +107,16 @@ ${OBJECTDIR}/deliveryUtils.o: deliveryUtils.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/deliveryUtils.o deliveryUtils.cpp
+
+${OBJECTDIR}/dispatch.o: dispatch.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/dispatch.o dispatch.cpp
+
+${OBJECTDIR}/dispatchUtils.o: dispatchUtils.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/dispatchUtils.o dispatchUtils.cpp
 
 ${OBJECTDIR}/globalExecutionTracker.o: globalExecutionTracker.cpp
 	${MKDIR} -p ${OBJECTDIR}

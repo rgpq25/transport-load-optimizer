@@ -7,9 +7,8 @@
 #include "route.h"
 
 namespace DeliveryUtils {
-    vector<Delivery> filterByDateAndRoute(const vector<Delivery>& deliveries, const string& date, const Route& route);
-    vector<Delivery> filterByShift(const vector<Delivery>& deliveries, const string& shift);
-    //vector<Delivery> filterByShift(const vector<Delivery>& deliveries, const string& shift);
+    vector<Delivery*> filterByDateAndRoute(const vector<Delivery*>& deliveries, const string& date, const Route& route);
+    vector<Delivery*> filterByShift(const vector<Delivery*>& deliveries, const string& shift);
 }
 
 #endif /* DELIVERYUTILS_H */

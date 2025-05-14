@@ -7,12 +7,14 @@
 #include "client.h"
 #include "input.h"
 #include "timeSlot.h"
+#include "dispatch.h"
 
 #include "SAGAOptimizer.h"
 #include "globalExecutionTracker.h"
 
 #include "deliveryUtils.h"
 #include "timeSlotUtils.h"
+#include "dispatchUtils.h"
 
 /*
  * Currently the algorithm can only asign the deliveries with "null" shifts
@@ -22,9 +24,6 @@
  * with "null" shifts. That way we can start attending deliveries with no
  * time window form today.
  */
-
-//Pass by value: Will not modify the original value passed
-//Pass by reference: Will modify the original value passed
 
 using namespace std;
 
@@ -36,21 +35,20 @@ int main(int argc, char** argv) {
     input.loadFromFile("datasets/input.txt");
     input.printInputData();
     
-    //return 0;
-    
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
     GlobalExecutionTracker tracker;
+    vector<Dispatch> finalDispatches;
     vector<string> uniqueDueDates = input.getUniqueDueDates();
-    vector<Delivery> deliveries = input.getAllDeliveriesFromOrders();
+    vector<Delivery*> deliveries = input.getAllDeliveriesFromOrders();
     
     for(const string& dueDate : uniqueDueDates) {
         for(const Route& route : input.getRoutes()) {
-            vector<Delivery> deliveriesForRoute = DeliveryUtils::filterByDateAndRoute(deliveries, dueDate, route);
+            vector<Delivery*> deliveriesForRoute = DeliveryUtils::filterByDateAndRoute(deliveries, dueDate, route);
             
             vector<string> shifts = {"morning", "afternoon", "null"};
             for (const string& shift : shifts) {                
-                vector<Delivery> deliveriesByShift = DeliveryUtils::filterByShift(deliveriesForRoute, shift);
+                vector<Delivery*> deliveriesByShift = DeliveryUtils::filterByShift(deliveriesForRoute, shift);
 
                 if (deliveriesByShift.empty()) continue;
 
@@ -67,19 +65,17 @@ int main(int argc, char** argv) {
                     //vector<Delivery> elegibles = DeliveryUtils::filterByWindow(deliveriesByShift, ts, route); //this will be included if we deliver "null" shift delveries early (TODO)
                     //if (elegibles.empty()) continue;
 
-                    cout << "→ Ejecutando SA-GA para fecha: " << dueDate
+                    cout << endl << "→ Ejecutando SA-GA para fecha: " << dueDate
                          << ", ruta: " << route.getId()
                          << ", shift: " << shift
                          << ", time slot: " << ts.getStartAsString() << " - " << ts.getEndAsString()
                          << ", pedidos: " << deliveriesByShift.size() << endl;
-
-                    // Empezamos con optimizacion SA-GA
                     
                     // 1. Filter deliveries by tracker
                     vector<Delivery*> deliveryPtrs;
-                    for (Delivery& d : deliveriesByShift) {
-                        if (!tracker.isDeliveryFulfilled(d.getId())) {
-                            deliveryPtrs.push_back(&d);
+                    for (Delivery* d : deliveriesByShift) {
+                        if (!tracker.isDeliveryFulfilled(d->getId())) {
+                            deliveryPtrs.push_back(d);
                         }
                     }
                     if (deliveryPtrs.empty()) continue;
@@ -122,12 +118,24 @@ int main(int argc, char** argv) {
                     
                     cout << " Best solution found with fitness: " << best.getFitness() << endl;
 
-                    //return 0;   // Finsh the iteration prematurely to check if everything was done correctly
+                    vector<Dispatch> dispatches = DispatchUtils::buildFromChromosome(
+                        best, 
+                        deliveryPtrs, 
+                        availableVehicles, 
+                        const_cast<Route*>(&route), 
+                        ts, 
+                        dueDate
+                    );
+                    finalDispatches.insert(finalDispatches.end(), dispatches.begin(), dispatches.end());
                 }
             }
         }
     }
 
+    cout << endl << "=========== FINAL DISPATCH PLAN ===========" << endl;
+    for (const Dispatch& d : finalDispatches) {
+        d.printSummary();
+    }
     return 0;
 }
 

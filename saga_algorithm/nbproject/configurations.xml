@@ -10,6 +10,7 @@
       <itemPath>client.h</itemPath>
       <itemPath>delivery.h</itemPath>
       <itemPath>deliveryUtils.h</itemPath>
+      <itemPath>dispatchUtils.h</itemPath>
       <itemPath>globalExecutionTracker.h</itemPath>
       <itemPath>input.h</itemPath>
       <itemPath>order.h</itemPath>
@@ -34,6 +35,8 @@
         <itemPath>block.cpp</itemPath>
         <itemPath>client.cpp</itemPath>
         <itemPath>delivery.cpp</itemPath>
+        <itemPath>dispatch.cpp</itemPath>
+        <itemPath>dispatch.h</itemPath>
         <itemPath>input.cpp</itemPath>
         <itemPath>order.cpp</itemPath>
         <itemPath>route.cpp</itemPath>
@@ -44,6 +47,7 @@
       </logicalFolder>
       <logicalFolder name="f3" displayName="utils" projectFiles="true">
         <itemPath>deliveryUtils.cpp</itemPath>
+        <itemPath>dispatchUtils.cpp</itemPath>
         <itemPath>timeSlotUtils.cpp</itemPath>
       </logicalFolder>
       <itemPath>main.cpp</itemPath>
@@ -93,6 +97,14 @@
       <item path="deliveryUtils.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="deliveryUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatch.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatch.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatchUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatchUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="globalExecutionTracker.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -172,6 +184,14 @@
       <item path="deliveryUtils.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="deliveryUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatch.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatch.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dispatchUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dispatchUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="globalExecutionTracker.cpp" ex="false" tool="1" flavor2="0">
       </item>

@@ -43,7 +43,7 @@ public:
     vector<Route>& getRoutes();
     vector<Order>& getOrders();
     
-    vector<Delivery> getAllDeliveriesFromOrders();
+    vector<Delivery*> getAllDeliveriesFromOrders();
     vector<string> getUniqueDueDates();
 };
 
