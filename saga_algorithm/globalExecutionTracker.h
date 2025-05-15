@@ -14,6 +14,7 @@
 #define GLOBALEXECUTIONTRACKER_H
 
 #include <set>
+#include <unordered_map>
 #include <map>
 #include <vector>
 
@@ -29,29 +30,33 @@ class GlobalExecutionTracker {
 private:
     set<int> fulfilledDeliveryIds;
     set<int> usedBlockIds;
-    map<int, vector<TimeSlot>> vehicleUsage;
+    unordered_map<string, unordered_map<int, vector<TimeSlot>>> vehicleUsageByDate;
 
 public:
     bool isDeliveryFulfilled(int deliveryId) const;
     bool isBlockUsed(int blockId) const;
-    bool isVehicleAvailable(int vehicleId, const TimeSlot& slot) const;
+    bool isVehicleAvailable(int vehicleId, const TimeSlot& slot, const string& date) const;
 
     void markDeliveryFulfilled(int deliveryId);
     void markBlockUsed(int blockId);
-    void reserveVehicle(int vehicleId, const TimeSlot& slot);
+    void reserveVehicle(int vehicleId, const TimeSlot& slot, const string& date);
 
     vector<TransportUnit*> getAvailableVehicles(
-        const std::vector<TransportUnit*>& all, 
-        const TimeSlot& slot
+        const vector<TransportUnit*>& all, 
+        const TimeSlot& slot, 
+        const string& date
     );
 
     void recordSolution(
         const Chromosome& solution,
-        const std::vector<Delivery*>& deliveries,
-        const std::vector<Block*>& blocks,
-        const std::vector<TransportUnit*>& vehicles,
-        const TimeSlot& slot
+        const vector<Delivery*>& deliveries,
+        const vector<Block*>& blocks,
+        const vector<TransportUnit*>& vehicles,
+        const TimeSlot& slot, 
+        const string& date
     );
+    
+    vector<int> getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const;
 };
 
 #endif /* GLOBALEXECUTIONTRACKER_H */

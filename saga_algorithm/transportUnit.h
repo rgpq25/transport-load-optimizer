@@ -21,6 +21,8 @@ public:
     double getLength() const;
     double getMaxWeight() const;
     double getMinWeight() const;
+    
+    double getVolume() const;
 };
 
 #endif /* TRANSPORTUNIT_H */

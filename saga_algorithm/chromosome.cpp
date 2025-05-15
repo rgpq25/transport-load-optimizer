@@ -42,7 +42,7 @@ vector<int> Chromosome::getAssignedBoxOrientations(int vehicleIdx, const vector<
     for (size_t i = 0; i < deliveryAssignments.size(); ++i) {
         const int assigned = deliveryAssignments[i];
         const vector<Block*>& blocks = deliveries[i]->getBlocksToDeliver();
-
+        
         if (assigned == vehicleIdx) {
             for (size_t j = 0; j < blocks.size(); ++j) {
                 result.push_back(boxOrientations[orientationIndex + j]);

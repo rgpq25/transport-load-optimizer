@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/SAGAOptimizer.o \
+	${OBJECTDIR}/bin3D.o \
 	${OBJECTDIR}/block.o \
 	${OBJECTDIR}/chromosome.o \
 	${OBJECTDIR}/client.o \
@@ -82,6 +83,11 @@ ${OBJECTDIR}/SAGAOptimizer.o: SAGAOptimizer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SAGAOptimizer.o SAGAOptimizer.cpp
+
+${OBJECTDIR}/bin3D.o: bin3D.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/bin3D.o bin3D.cpp
 
 ${OBJECTDIR}/block.o: block.cpp
 	${MKDIR} -p ${OBJECTDIR}

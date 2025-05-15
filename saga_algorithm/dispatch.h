@@ -1,15 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/class.h to edit this template
- */
-
-/* 
- * File:   dispatch.h
- * Author: renzo
- *
- * Created on 13 de mayo de 2025, 09:56
- */
-
 #ifndef DISPATCH_H
 #define DISPATCH_H
 
@@ -22,6 +10,13 @@
 #include "delivery.h"
 #include "block.h"
 
+struct BlockPlacement {
+    int blockId;
+    int orientation; // 0 or 1
+    double x, y, z;
+    double lx, ly, lz; // rotated dimensions
+};
+
 class Dispatch {
 private:
     TransportUnit* truck;
@@ -31,6 +26,7 @@ private:
     vector<Delivery*> deliveries;
     vector<Block*> blocks;
     vector<int> blockOrientations;
+    vector<BlockPlacement> blockPlacements;
 
 public:
     Dispatch(
@@ -40,7 +36,8 @@ public:
         const string& date,
         const vector<Delivery*>& deliveries, 
         const vector<Block*>& blocks,
-        const vector<int>& blockOrientations
+        const vector<int>& blockOrientations,
+        const vector<BlockPlacement>& blockPlacements
     );
 
     void printSummary() const;
@@ -51,6 +48,7 @@ public:
     string getDate() const;
     const vector<Delivery*>& getDeliveries() const;
     const vector<Block*>& getBlocks() const;
+    const vector<BlockPlacement>& getBlockPlacements() const;
 };
 
 #endif /* DISPATCH_H */

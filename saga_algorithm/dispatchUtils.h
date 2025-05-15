@@ -19,6 +19,8 @@ namespace DispatchUtils {
         const TimeSlot& slot,
         const string& date
     );
+    
+    void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename);
 }
 
 #endif /* DISPATCHUTILS_H */

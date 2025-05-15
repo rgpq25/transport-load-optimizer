@@ -35,3 +35,7 @@ double TransportUnit::getMaxWeight() const {
 double TransportUnit::getMinWeight() const {
     return minWeight;
 }
+
+double TransportUnit::getVolume() const {
+    return this->height * this->width * this->length;
+}

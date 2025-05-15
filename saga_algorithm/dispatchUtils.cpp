@@ -1,5 +1,8 @@
 #include "dispatchUtils.h"
 #include <map>
+#include "bin3D.h"
+#include <fstream>
+#include <iostream>
 
 namespace DispatchUtils {
     vector<Dispatch> buildFromChromosome(
@@ -11,7 +14,6 @@ namespace DispatchUtils {
         const string& date
     ) {
         vector<Dispatch> result;
-
         const vector<int>& assignments = chromosome.getDeliveryAssignments();
 
         map<int, vector<Delivery*>> deliveriesByVehicle;
@@ -33,7 +35,38 @@ namespace DispatchUtils {
             TransportUnit* truck = vehicles[vIdx];
             
             vector<int> blockOrientations = chromosome.getAssignedBoxOrientations(vIdx, deliveries);
-            //VERIFY THE ABOVE LINE, IS IT WORKING CORRECTLY?
+            
+            const vector<Block*>& vehicleBlocks = blocksByVehicle[vIdx];
+
+            // Run Bin3D placement again to retrieve positions
+            Bin3D bin(truck->getLength(), truck->getWidth(), truck->getHeight());
+            vector<BlockPlacement> placements;
+            bool feasible = true;
+
+            for (size_t i = 0; i < vehicleBlocks.size(); ++i) {
+                if (!bin.tryPlaceBlock(vehicleBlocks[i], blockOrientations[i])) {
+                    feasible = false;
+                    break;
+                }
+            }
+
+            if (!feasible) continue;  // Safety guard
+
+            // Retrieve and convert placed blocks
+            const vector<PlacedBox>& placed = bin.getPlacedBoxes();
+            for (const PlacedBox& pb : placed) {
+                BlockPlacement bp;
+                bp.blockId = pb.block->getId();
+                bp.orientation = pb.orientationIndex;
+                bp.x = pb.position[0];
+                bp.y = pb.position[1];
+                bp.z = pb.position[2];
+                bp.lx = pb.size[0];
+                bp.ly = pb.size[1];
+                bp.lz = pb.size[2];
+                placements.push_back(bp);
+            }
+            
             
             Dispatch dispatch(
                 truck,
@@ -42,7 +75,8 @@ namespace DispatchUtils {
                 date,
                 deliveriesByVehicle[vIdx],
                 blocksByVehicle[vIdx],
-                blockOrientations
+                blockOrientations,
+                placements
             );
             
             result.push_back(dispatch);
@@ -56,5 +90,38 @@ namespace DispatchUtils {
         }
 
         return result;
+    }
+    
+    void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename) {
+        ofstream file(filename);
+        if (!file.is_open()) {
+            cerr << "Error opening output CSV file." << endl;
+            return;
+        }
+
+        // Header
+        file << "dispatch_id,truck_id,date,slot_start,slot_end,"
+            << "truck_l,truck_w,truck_h,"
+            << "block_id,orientation,x,y,z,lx,ly,lz\n";
+
+        for (int i = 0; i < dispatches.size(); ++i) {
+            const Dispatch& d = dispatches[i];
+            int truckId = d.getTruck()->getId();
+            string date = d.getDate();
+            string start = d.getTimeSlot().getStartAsString();
+            string end = d.getTimeSlot().getEndAsString();
+
+            for (const auto& bp : d.getBlockPlacements()) {
+                file << i << "," << truckId << "," << date << ","
+                    << start << "," << end << ","
+                    << d.getTruck()->getLength() << "," << d.getTruck()->getWidth() << "," << d.getTruck()->getHeight() << ","
+                    << bp.blockId << "," << bp.orientation << ","
+                    << bp.x << "," << bp.y << "," << bp.z << ","
+                    << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
+            }
+        }
+
+        file.close();
+        cout << "[CSV] Exported " << dispatches.size() << " dispatches to " << filename << endl;
     }
 }

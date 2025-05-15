@@ -21,6 +21,8 @@ public:
     double getLength() const;
     double getWeight() const;
     double getFragility() const;
+    
+    double getVolume() const;
 };
 
 #endif /* BLOCK_H */

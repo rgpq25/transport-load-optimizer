@@ -34,15 +34,24 @@
 
 using namespace std;
 
+void printLog(const string& log, bool debug) {
+    if (debug == true) cout << log << endl;
+}
+
 int main(int argc, char** argv) {
     int unloadingTime = 20;
     int timeSlotInterval = 30;
+    bool debug = false;
     
     Input input;
-    input.loadFromFile("datasets/input1.txt");
-    input.printInputData();
+    input.loadFromFile("../input/input_large.txt");
     
-    //cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
+    
+    input.printInputData();
+    //return 0;
+    
+    
+    cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
     GlobalExecutionTracker tracker;
     vector<Dispatch> finalDispatches;
@@ -50,14 +59,20 @@ int main(int argc, char** argv) {
     vector<Delivery*> deliveries = input.getAllDeliveriesFromOrders();
     
     for(const string& dueDate : uniqueDueDates) {
+        printLog("DUE DATE = " + dueDate, debug);
+        
         for(const Route& route : input.getRoutes()) {
+            printLog("    ROUTE ID = " + to_string(route.getId()), debug);
             vector<Delivery*> deliveriesForRoute = DeliveryUtils::filterByDateAndRoute(deliveries, dueDate, route);
             
             vector<string> shifts = {"morning", "afternoon"};
-            for (const string& shift : shifts) {                
+            for (const string& shift : shifts) {
+                printLog("       SHIFT = " + shift, debug);
                 vector<Delivery*> deliveriesByShift = DeliveryUtils::filterByShift(deliveriesForRoute, shift);
-
-                if (deliveriesByShift.empty()) continue;
+                if (deliveriesByShift.empty()) {
+                    printLog("            There were no deliveries for this shift.", debug);
+                    continue;
+                }
 
                 vector<TimeSlot> timeSlots;
                 if (shift == "morning") {
@@ -65,19 +80,9 @@ int main(int argc, char** argv) {
                 } else if (shift == "afternoon") {
                     timeSlots = TimeSlotUtils::generateForWindow(840, 1080, route, unloadingTime, timeSlotInterval); // 14:00 – 18:00
                 }
+                
 
                 for (const TimeSlot& ts : timeSlots) {
-                    //vector<Delivery> elegibles = DeliveryUtils::filterByWindow(deliveriesByShift, ts, route); //this will be included if we deliver "null" shift delveries early (TODO)
-                    //if (elegibles.empty()) continue;
-
-                    /*
-                    cout << endl << "→ Ejecutando SA-GA para fecha: " << dueDate
-                         << ", ruta: " << route.getId()
-                         << ", shift: " << shift
-                         << ", time slot: " << ts.getStartAsString() << " - " << ts.getEndAsString()
-                         << ", pedidos: " << deliveriesByShift.size() << endl;
-                    */
-                    
                     // 1. Filter deliveries by tracker
                     vector<Delivery*> deliveryPtrs;
                     for (Delivery* d : deliveriesByShift) {
@@ -87,29 +92,45 @@ int main(int argc, char** argv) {
                     }
                     if (deliveryPtrs.empty()) continue;
 
-                    // 2. Filter blocks (only those not already used)
+                    
+                    // 2. Filter blocks (only those not already used). If block not available, discard said delivery (no partial deliveries allowed)
+                    vector<Delivery*> finalDeliveries;
                     vector<Block*> blocksForThisBatch;
+
                     for (Delivery* d : deliveryPtrs) {
                         const vector<Block*>& bs = d->getBlocksToDeliver();
+                        bool allBlocksAvailable = true;
+                        int idOfAlreadyUsedBlock = -1;
+                        
                         for (Block* b : bs) {
-                            if (!tracker.isBlockUsed(b->getId())) {
-                                blocksForThisBatch.push_back(b);
+                            if (tracker.isBlockUsed(b->getId())) {
+                                allBlocksAvailable = false;
+                                idOfAlreadyUsedBlock = b->getId();
+                                break;
                             }
                         }
+
+                        if (allBlocksAvailable) {
+                            finalDeliveries.push_back(d);
+                            blocksForThisBatch.insert(blocksForThisBatch.end(), bs.begin(), bs.end());
+                        } else {
+                            cout << "[DEBUG] Delivery " << d->getId() << " cannot be attended: at least one block already used (" << idOfAlreadyUsedBlock << ")" << endl;
+                        }
                     }
-                    if (blocksForThisBatch.empty()) continue;
+                    if (finalDeliveries.empty() || blocksForThisBatch.empty()) continue;
 
                     // 3. Filter available vehicles for this time slot
                     vector<TransportUnit*> allVehicles;
                     for (TransportUnit& unit : input.getTransportUnits()) {
                         allVehicles.push_back(&unit);
                     }
-                    vector<TransportUnit*> availableVehicles = tracker.getAvailableVehicles(allVehicles, ts);
+                    vector<TransportUnit*> availableVehicles = tracker.getAvailableVehicles(allVehicles, ts, dueDate);
                     if (availableVehicles.empty()) continue;
-
+                    
+                    
                     // 4. Create and run optimizer
                     SAGAOptimizer optimizer(
-                        deliveryPtrs,
+                        finalDeliveries,
                         blocksForThisBatch,
                         availableVehicles,
                         const_cast<Route*>(&route),
@@ -121,28 +142,47 @@ int main(int argc, char** argv) {
                     );
 
                     Chromosome best = optimizer.run();
-                    tracker.recordSolution(best, deliveryPtrs, blocksForThisBatch, availableVehicles, ts);
-                    
-                    //cout << " Best solution found with fitness: " << best.getFitness() << endl;
+                    tracker.recordSolution(best, finalDeliveries, blocksForThisBatch, availableVehicles, ts, dueDate);
 
                     vector<Dispatch> dispatches = DispatchUtils::buildFromChromosome(
                         best, 
-                        deliveryPtrs, 
+                        finalDeliveries, 
                         availableVehicles, 
                         const_cast<Route*>(&route), 
                         ts, 
                         dueDate
                     );
                     finalDispatches.insert(finalDispatches.end(), dispatches.begin(), dispatches.end());
+                    
+                    printLog("           SAGA RESULT = " + to_string(best.getFitness()), debug);
                 }
             }
         }
     }
-
-    cout << endl << "=========== FINAL DISPATCH PLAN ===========" << endl;
+    
+    
+    cout << endl << "=========== FINAL DISPATCH PLAN (" << finalDispatches.size() << ") ===========" << endl;
+    int disCounter = 1;
     for (const Dispatch& d : finalDispatches) {
+        cout << "Dispatch ID: " << disCounter << endl;
         d.printSummary();
+        
+        disCounter = disCounter + 1;
     }
+    DispatchUtils::exportDispatchesToCSV(finalDispatches, "../output/output_dispatches.csv");
+    
+    
+    cout << endl << "=========== DELIVERIES NOT ATTENDED ===========" << endl;
+    vector<int> unfulfilled = tracker.getUnfulfilledDeliveryIds(deliveries);
+
+    if (unfulfilled.empty()) {
+        cout << " Todos los deliveries fueron atendidos." << endl;
+    } else {
+        for (int id : unfulfilled) {
+            cout << "Delivery no atendido → ID: " << id << endl;
+        }
+    }
+    
     return 0;
 }
 

@@ -8,12 +8,14 @@ bool GlobalExecutionTracker::isBlockUsed(int blockId) const {
     return usedBlockIds.count(blockId) > 0;
 }
 
-bool GlobalExecutionTracker::isVehicleAvailable(int vehicleId, const TimeSlot& slot) const {
-    auto it = vehicleUsage.find(vehicleId);
-    if (it == vehicleUsage.end()) return true;
+bool GlobalExecutionTracker::isVehicleAvailable(int vehicleId, const TimeSlot& slot, const string& date) const {
+    auto dayIt = vehicleUsageByDate.find(date);
+    if (dayIt == vehicleUsageByDate.end()) return true;
 
-    for (const TimeSlot& ts : it->second) {
-        // Check for overlap: if current slot overlaps with any assigned one
+    auto vehIt = dayIt->second.find(vehicleId);
+    if (vehIt == dayIt->second.end()) return true;
+
+    for (const TimeSlot& ts : vehIt->second) {
         if (!(slot.getEnd() <= ts.getStart() || slot.getStart() >= ts.getEnd())) {
             return false;
         }
@@ -29,14 +31,14 @@ void GlobalExecutionTracker::markBlockUsed(int blockId) {
     usedBlockIds.insert(blockId);
 }
 
-void GlobalExecutionTracker::reserveVehicle(int vehicleId, const TimeSlot& slot) {
-    vehicleUsage[vehicleId].push_back(slot);
+void GlobalExecutionTracker::reserveVehicle(int vehicleId, const TimeSlot& slot, const string& date) {
+    vehicleUsageByDate[date][vehicleId].push_back(slot);
 }
 
-vector<TransportUnit*> GlobalExecutionTracker::getAvailableVehicles(const vector<TransportUnit*>& all, const TimeSlot& slot) {
+vector<TransportUnit*> GlobalExecutionTracker::getAvailableVehicles(const vector<TransportUnit*>& all, const TimeSlot& slot, const string& date) {
     vector<TransportUnit*> result;
     for (TransportUnit* v : all) {
-        if (isVehicleAvailable(v->getId(), slot)) {
+        if (isVehicleAvailable(v->getId(), slot, date)) {
             result.push_back(v);
         }
     }
@@ -48,10 +50,10 @@ void GlobalExecutionTracker::recordSolution(
     const vector<Delivery*>& deliveries,
     const vector<Block*>& blocks,
     const vector<TransportUnit*>& vehicles,
-    const TimeSlot& slot
+    const TimeSlot& slot, 
+    const string& date
 ) {
     const vector<int>& deliveryAssignments = solution.getDeliveryAssignments();
-    const vector<int>& boxOrientations = solution.getBoxOrientations();
 
     // Register deliveries and their vehicle usage
     for (int i = 0; i < deliveries.size(); ++i) {
@@ -59,11 +61,22 @@ void GlobalExecutionTracker::recordSolution(
         if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
 
         markDeliveryFulfilled(deliveries[i]->getId());
-        reserveVehicle(vehicles[vehicleIndex]->getId(), slot);
+        reserveVehicle(vehicles[vehicleIndex]->getId(), slot, date);
         
         const std::vector<Block*>& bs = deliveries[i]->getBlocksToDeliver();
         for (Block* b : bs) {
             markBlockUsed(b->getId());
         }
     }
+}
+
+
+vector<int> GlobalExecutionTracker::getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const {
+    vector<int> result;
+    for (const Delivery* d : allDeliveries) {
+        if (!isDeliveryFulfilled(d->getId())) {
+            result.push_back(d->getId());
+        }
+    }
+    return result;
 }

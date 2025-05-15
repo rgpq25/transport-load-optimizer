@@ -11,6 +11,7 @@
  */
 
 #include "SAGAOptimizer.h"
+#include "bin3D.h"
 #include <cstdlib>
 #include <ctime>
 #include <unordered_map>
@@ -171,6 +172,24 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
 
         usedVehicles.insert(vehicleIndex);
     }
+    
+    // 3D Feasibility Check
+    
+    int boxIndex = 0;
+    for (int vIdx : usedVehicles) {
+        TransportUnit* vehicle = vehicles[vIdx];
+        const vector<Block*>& blocksForVehicle = vehicleBlocks[vIdx];
+
+        Bin3D bin(vehicle->getLength(), vehicle->getWidth(), vehicle->getHeight());
+        vector<int> orientationsForVehicle = chromosome.getAssignedBoxOrientations(vIdx, deliveries);
+        
+        for (size_t i = 0; i < blocksForVehicle.size(); ++i) {
+            if (!bin.tryPlaceBlock(blocksForVehicle[i], orientationsForVehicle[i])) {
+                return 0.0;  // Infeasible packing
+            }
+        }
+    }
+    
 
     // Evaluate fitness
     double totalUtilizationScore = 0.0;

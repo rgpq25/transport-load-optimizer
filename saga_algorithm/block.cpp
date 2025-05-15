@@ -34,3 +34,7 @@ double Block::getWeight() const {
 double Block::getFragility() const {
     return fragility;
 }
+
+double Block::getVolume() const {
+    return this->height * this->width * this->length;
+}

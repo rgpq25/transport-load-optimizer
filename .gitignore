@@ -2,3 +2,7 @@
 build
 dist
 .dep.inc
+
+# For repo purposes
+input
+output
