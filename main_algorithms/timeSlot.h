@@ -19,7 +19,7 @@ using namespace std;
 
 class TimeSlot {
 private:
-    int startMinute; // Minutes from midnight (e.g. 480 = 08:00)
+    int startMinute;
     int endMinute;
 
 public:

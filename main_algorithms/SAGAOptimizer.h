@@ -51,7 +51,7 @@ public:
         int populationSize
     );
 
-    Chromosome run(); // runs the SA-GA loop and returns the best solution
+    Chromosome run(bool printDebug); // runs the SA-GA loop and returns the best solution
 
 private:
     vector<Chromosome> generateInitialPopulation();

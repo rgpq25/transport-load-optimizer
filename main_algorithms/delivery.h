@@ -12,10 +12,10 @@ class Order;
 class Delivery {
 private:
     int id;
-    string shift;       //"morning" | "afternoon" | "null"
-    string dueDate;     //YYYY-MM-DD
+    string shift;
+    string dueDate;
     vector<Block*> blocksToDeliver;
-    Order* parentOrder; // ← reference to parent
+    Order* parentOrder;
 public:
     Delivery();
     Delivery(int id, const string& shift, const string& dueDate, vector<Block*>& blocksToDeliver, Order* parentOrder);

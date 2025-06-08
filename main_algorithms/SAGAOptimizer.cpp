@@ -18,6 +18,9 @@
 #include <unordered_set>
 #include <cmath>
 #include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <fstream>
 
 SAGAOptimizer::SAGAOptimizer(
     vector<Delivery*>& deliveries,
@@ -44,7 +47,7 @@ SAGAOptimizer::SAGAOptimizer(
 
 
 
-Chromosome SAGAOptimizer::run() {
+Chromosome SAGAOptimizer::run(bool printDebug) {
     vector<Chromosome> population = generateInitialPopulation();
 
     // 1. Evaluate initial fitness
@@ -62,10 +65,24 @@ Chromosome SAGAOptimizer::run() {
     }
 
     // 3. Simulated Annealing loop
-    int T = T_init;
+    double T = T_init;
 
+    ofstream debugFile;
+    int iterationIndex = 0;
+    int totalIterationsEstimate = static_cast<int>(log(static_cast<double>(T_min) / T_init) / log(alpha)) * -1;
+    int summaryStep = max(1, totalIterationsEstimate / 19); // 20 points → 19 gaps
+    
+    if (printDebug == true) {
+        debugFile.open("saga_debug_log.csv");
+        debugFile << "Temperatura,Fitness promedio,Mejor fitness poblacion,Mejor fitness global,Duracion (s)\n";
+    }
+    
     while (T > T_min) {
+        auto start = chrono::high_resolution_clock::now();  // Inicio de medición de tiempo
+        
         vector<Chromosome> newPopulation;
+        double sumFitness = 0.0;
+        double bestFitnessInPopulation = population[0].getFitness();
 
         for (int i = 0; i < populationSize; ++i) {
             Chromosome parent1 = selectParent(population);
@@ -74,31 +91,63 @@ Chromosome SAGAOptimizer::run() {
             Chromosome child = crossover(parent1, parent2);
             mutate(child);
             child.setFitness(evaluateFitness(child));
-
+            
+            double childFitness = child.getFitness();
+            if (childFitness > bestFitnessInPopulation) {
+                bestFitnessInPopulation = childFitness;
+            }
+            if (parent1.getFitness() > bestFitnessInPopulation) {
+                bestFitnessInPopulation = parent1.getFitness();
+            }
+            if (parent2.getFitness() > bestFitnessInPopulation) {
+                bestFitnessInPopulation = parent2.getFitness();
+            }
+            
             // Apply acceptance criteria (Simulated Annealing)
-            double delta = parent1.getFitness() - child.getFitness();
+            double delta = parent1.getFitness() - childFitness;
 
             if (delta < 0) {
                 newPopulation.push_back(child);
+                sumFitness += child.getFitness();
             } else {
                 double prob = exp(-delta / T);
                 double randVal = (double)rand() / RAND_MAX;
 
                 if (randVal < prob) {
                     newPopulation.push_back(child);
+                    sumFitness += child.getFitness();
                 } else {
                     newPopulation.push_back(parent1);
+                    sumFitness += parent1.getFitness();
                 }
             }
-
+            
             // Update best solution
             if (child.getFitness() > best.getFitness()) {
                 best = child;
             }
         }
+        
+        auto end = chrono::high_resolution_clock::now();  // Fin de medición de tiempo
+        chrono::duration<double> duration = end - start;
+
+        if (printDebug && (iterationIndex == 0 || T <= T_min || iterationIndex % summaryStep == 0)) {
+            double avgFitness = sumFitness / populationSize;
+            debugFile  << T << ","
+                 << avgFitness << ","
+                 << bestFitnessInPopulation << ","
+                 << best.getFitness() << ","
+                 << duration.count() << "\n";
+        }
+        
 
         population = newPopulation;
         T = T * alpha;
+        iterationIndex++;
+    }
+    
+    if (printDebug) {
+        debugFile.close();
     }
 
     return best;
@@ -152,12 +201,19 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     unordered_set<int> usedVehicles;
     
     int numDeliveriesAssigned = 0;
+    
+    int totalPriority = 0;
+    int attendedPriority = 0;
 
     // Go through all deliveries and assign their blocks to the vehicle assigned
     for (int i = 0; i < deliveries.size(); ++i) {
+        int priority = deliveries[i]->getPriority();
+        totalPriority += priority;
+        
         int vehicleIndex = deliveryAssignments[i];
         if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
         
+        attendedPriority += priority;
         numDeliveriesAssigned++;
 
         Delivery* d = deliveries[i];
@@ -215,19 +271,22 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     int numVehiclesUsed = usedVehicles.size();
     double avgUtilization = usedVehicles.empty() ? 0.0 : totalUtilizationScore / numVehiclesUsed;
     double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
+    double priorityCoverage = (totalPriority > 0) ? (double)attendedPriority / totalPriority : 0.0;
 
     // Simple fitness function (can be tuned)
     double A = 0.5;  // minimize truck count
     double B = 0.5;  // maximize volume utilization
     double C = 1.0;  // penalty factor
     double D = 1.0;  // reward for fulfilling deliveries
+    double E = 1.0;  // reward priority coverage
     
     double truckScore = (vehicles.empty()) ? 0.0 : (1.0 - (double(numVehiclesUsed) / vehicles.size()));
 
     double fitness = A * truckScore +
                      B * avgUtilization -
                      C * overcapacityPenalty +
-                     D * fulfillmentRatio;
+                     D * fulfillmentRatio +
+                     E * priorityCoverage;
 
     return fitness;
 }
@@ -288,7 +347,7 @@ void SAGAOptimizer::mutate(Chromosome& c) {
     // Mutate delivery assignments
     for (size_t i = 0; i < deliveries.size(); ++i) {
         if ((rand() / double(RAND_MAX)) < deliveryMutationRate) {
-            int newVehicle = rand() % vehicles.size();
+            int newVehicle = (rand() % (vehicles.size() + 1)) - 1;
             deliveries[i] = newVehicle;
         }
     }
