@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=saga_algorithm
+PROJECTNAME=main_algorithms
 
 # Active Configuration
 DEFAULTCONF=Debug

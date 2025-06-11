@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=MinGW-Windows
 CND_ARTIFACT_DIR_Debug=dist/Debug/MinGW-Windows
-CND_ARTIFACT_NAME_Debug=saga_algorithm
-CND_ARTIFACT_PATH_Debug=dist/Debug/MinGW-Windows/saga_algorithm
+CND_ARTIFACT_NAME_Debug=main_algorithms
+CND_ARTIFACT_PATH_Debug=dist/Debug/MinGW-Windows/main_algorithms
 CND_PACKAGE_DIR_Debug=dist/Debug/MinGW-Windows/package
-CND_PACKAGE_NAME_Debug=sagaalgorithm.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/MinGW-Windows/package/sagaalgorithm.tar
+CND_PACKAGE_NAME_Debug=mainalgorithms.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/MinGW-Windows/package/mainalgorithms.tar
 # Release configuration
 CND_PLATFORM_Release=MinGW-Windows
 CND_ARTIFACT_DIR_Release=dist/Release/MinGW-Windows
-CND_ARTIFACT_NAME_Release=saga_algorithm
-CND_ARTIFACT_PATH_Release=dist/Release/MinGW-Windows/saga_algorithm
+CND_ARTIFACT_NAME_Release=main_algorithms
+CND_ARTIFACT_PATH_Release=dist/Release/MinGW-Windows/main_algorithms
 CND_PACKAGE_DIR_Release=dist/Release/MinGW-Windows/package
-CND_PACKAGE_NAME_Release=sagaalgorithm.tar
-CND_PACKAGE_PATH_Release=dist/Release/MinGW-Windows/package/sagaalgorithm.tar
+CND_PACKAGE_NAME_Release=mainalgorithms.tar
+CND_PACKAGE_PATH_Release=dist/Release/MinGW-Windows/package/mainalgorithms.tar
 #
 # include compiler specific variables
 #
