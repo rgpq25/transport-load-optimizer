@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cmath>
+#include <algorithm>
 
 #include "block.h"
 #include "transportUnit.h"
@@ -11,6 +13,9 @@
 
 #include "SAGAOptimizer.h"
 #include "globalExecutionTracker.h"
+
+#include "GRASPOptimizer.h"
+#include "graspPackingState.h"
 
 #include "deliveryUtils.h"
 #include "timeSlotUtils.h"
@@ -52,7 +57,7 @@ int main(int argc, char** argv) {
     
     
     Input input;
-    input.loadFromFile("../input/input_large.txt");
+    input.loadFromFile("../input/input_test.txt");
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
@@ -209,7 +214,163 @@ int main(int argc, char** argv) {
                         printLog("           SAGA RESULT = " + to_string(best.getFitness()), debug);
                     } 
                     else if (algorithmToRun == "grasp") {
-                        printLog("           NOT IMPLEMENTED YET!!!", debug);
+                        // Filtrar deliveries ya atendidos
+                        vector<Delivery*> filteredDeliveries;
+                        for (size_t i = 0; i < finalDeliveries.size(); ++i) {
+                            if (!tracker.isDeliveryFulfilled(finalDeliveries[i]->getId())) {
+                                filteredDeliveries.push_back(finalDeliveries[i]);
+                            }
+                        }
+                        if (filteredDeliveries.empty()) continue;
+
+                        // Estimar volumen total de los bloques
+                        double totalBlockVolume = 0.0;
+                        vector<Block*> blocksForFilteredDeliveries;
+                        for (size_t i = 0; i < filteredDeliveries.size(); ++i) {
+                            const vector<Block*>& bs = filteredDeliveries[i]->getBlocksToDeliver();
+                            for (size_t j = 0; j < bs.size(); ++j) {
+                                Block* b = bs[j];
+                                totalBlockVolume += b->getLength() * b->getWidth() * b->getHeight();
+                                blocksForFilteredDeliveries.push_back(b);
+                            }
+                        }
+
+                        // Ordenar camiones por cercanía de volumen al requerido
+                        vector<pair<TransportUnit*, double>> sortedVehicles;
+                        for (size_t i = 0; i < availableVehicles.size(); ++i) {
+                            TransportUnit* truck = availableVehicles[i];
+                            double truckVol = truck->getLength() * truck->getWidth() * truck->getHeight();
+                            double diff = fabs(truckVol - totalBlockVolume);
+                            sortedVehicles.push_back(make_pair(truck, diff));
+                        }
+
+                        std::sort(sortedVehicles.begin(), sortedVehicles.end(),
+                            [](const pair<TransportUnit*, double>& a, const pair<TransportUnit*, double>& b) {
+                                return a.second < b.second;
+                            });
+
+                        // Ejecutar GRASP por camión
+                        for (size_t v = 0; v < sortedVehicles.size(); ++v) {
+                            TransportUnit* truck = sortedVehicles[v].first;
+
+                            GRASPOptimizer optimizer;
+                            vector<const Block*> constBlocks;
+                            for (size_t i = 0; i < blocksForFilteredDeliveries.size(); ++i) {
+                                constBlocks.push_back(static_cast<const Block*>(blocksForFilteredDeliveries[i]));
+                            }
+
+                            GraspPackingState packing = optimizer.constructPacking(
+                                constBlocks,
+                                truck,
+                                0.5
+                            );
+
+                            if (packing.getPlacedLayers().empty()) {
+                                continue; // nada empacado, siguiente camión
+                            }
+
+                            // Construir solución GRASP
+                            GraspSolution graspSol;
+                            std::set<int> usedBlockIds;
+                            const vector<LayerCandidate>& layers = packing.getPlacedLayers();
+                            for (size_t i = 0; i < layers.size(); ++i) {
+                                const vector<const Block*>& bs = layers[i].getBlocks();
+                                for (size_t j = 0; j < bs.size(); ++j) {
+                                    usedBlockIds.insert(bs[j]->getId());
+                                }
+                            }
+
+                            // Asignar entregas completamente empacadas
+                            vector<Delivery*> attendedDeliveries;
+                            for (size_t i = 0; i < filteredDeliveries.size(); ++i) {
+                                Delivery* d = filteredDeliveries[i];
+                                const vector<Block*>& bs = d->getBlocksToDeliver();
+
+                                bool allIncluded = true;
+                                for (size_t j = 0; j < bs.size(); ++j) {
+                                    if (usedBlockIds.count(bs[j]->getId()) == 0) {
+                                        allIncluded = false;
+                                        break;
+                                    }
+                                }
+
+                                if (allIncluded) {
+                                    graspSol.assignDelivery(d, truck);
+                                    attendedDeliveries.push_back(d);
+                                }
+                            }
+
+                            // Registrar bloques empacados
+                            double accumulatedZ = 0.0;
+                            for (size_t i = 0; i < layers.size(); ++i) {
+                                const LayerCandidate& layer = layers[i];
+                                const vector<const Block*>& bs = layer.getBlocks();
+                                
+                                // --- DEBUG INICIO ---
+                                cout << "Layer " << i << " | height = " << layer.getHeight() << " | Blocks: " << bs.size() << endl;
+                                for (size_t j = 0; j < bs.size(); ++j) {
+                                    const Block* block = bs[j];
+                                    pair<double, double> pos = layer.getPosition(block->getId());
+                                    int ori = layer.getOrientation(block->getId());
+                                    double lx = (ori == 0) ? block->getLength() : block->getWidth();
+                                    double ly = (ori == 0) ? block->getWidth() : block->getLength();
+                                    double lz = block->getHeight();
+
+                                    cout << " - Block " << block->getId()
+                                         << " → Pos(" << pos.first << ", " << pos.second << ", " << accumulatedZ << ")"
+                                         << " | Size(" << lx << ", " << ly << ", " << lz << ") | Ori: " << ori << endl;
+                                }
+                                // --- DEBUG FIN ---
+
+                                for (size_t j = 0; j < bs.size(); ++j) {
+                                    const Block* block = bs[j];
+                                    int orientation = layer.getOrientation(block->getId());
+                                    pair<double, double> pos = layer.getPosition(block->getId());
+
+                                    double lx = (orientation == 0) ? block->getLength() : block->getWidth();
+                                    double ly = (orientation == 0) ? block->getWidth() : block->getLength();
+                                    double lz = block->getHeight();
+
+                                    BlockPlacement bp;
+                                    bp.blockId = block->getId();
+                                    bp.orientation = orientation;
+                                    bp.x = pos.first;
+                                    bp.y = pos.second;
+                                    bp.z = accumulatedZ;
+                                    bp.lx = lx;
+                                    bp.ly = ly;
+                                    bp.lz = lz;
+
+                                    graspSol.addPackedBlock(const_cast<Block*>(block), orientation, bp);
+                                }
+
+                                accumulatedZ += layer.getHeight();
+                            }
+
+                            // Registrar solución y cortar iteración
+                            if (!attendedDeliveries.empty()) {
+                                tracker.recordGraspSolution(
+                                    graspSol,
+                                    attendedDeliveries,
+                                    availableVehicles,
+                                    ts,
+                                    dueDate
+                                );
+
+                                vector<Dispatch> dispatches = DispatchUtils::buildFromGrasp(
+                                    graspSol,
+                                    attendedDeliveries,
+                                    availableVehicles,
+                                    const_cast<Route*>(&route),
+                                    ts,
+                                    dueDate
+                                );
+
+                                finalDispatches.insert(finalDispatches.end(), dispatches.begin(), dispatches.end());
+                                printLog("           GRASP result for truck ID " + to_string(truck->getId()) + ": " + to_string(dispatches.size()) + " dispatch(es)", debug);
+                                break; // <== Muy importante para evitar múltiples asignaciones del mismo delivery
+                            }
+                        }
                     }
                 }
             }
@@ -235,12 +396,12 @@ int main(int argc, char** argv) {
         d.printSummary();
     }
     
-    /*
+    
     DispatchUtils::exportDispatchesToCSV(
         finalDispatches, 
         "../output/output_dispatches.csv"
     );
-    */
+    
     
     cout << endl << "=========== DELIVERIES NOT ATTENDED ===========" 
             << endl;

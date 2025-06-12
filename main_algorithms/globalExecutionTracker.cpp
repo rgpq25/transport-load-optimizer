@@ -70,6 +70,34 @@ void GlobalExecutionTracker::recordSolution(
     }
 }
 
+void GlobalExecutionTracker::recordGraspSolution(
+    const GraspSolution& solution,
+    const vector<Delivery*>& allDeliveries,
+    const vector<TransportUnit*>& allVehicles,
+    const TimeSlot& slot,
+    const string& date
+) {
+    const map<int, TransportUnit*>& assignments = solution.getAssignments();
+
+    for (size_t i = 0; i < allDeliveries.size(); ++i) {
+        Delivery* d = allDeliveries[i];
+        int delId = d->getId();
+
+        if (assignments.count(delId) == 0) continue;
+
+        TransportUnit* truck = assignments.at(delId);
+        int truckId = truck->getId();
+
+        markDeliveryFulfilled(delId);
+        reserveVehicle(truckId, slot, date);
+
+        const vector<Block*>& bs = d->getBlocksToDeliver();
+        for (size_t j = 0; j < bs.size(); ++j) {
+            markBlockUsed(bs[j]->getId());
+        }
+    }
+}
+
 
 vector<int> GlobalExecutionTracker::getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const {
     vector<int> result;

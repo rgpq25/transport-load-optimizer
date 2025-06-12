@@ -1,15 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/class.h to edit this template
- */
-
-/* 
- * File:   globalExecutionTracker.h
- * Author: renzo
- *
- * Created on 12 de mayo de 2025, 18:52
- */
-
 #ifndef GLOBALEXECUTIONTRACKER_H
 #define GLOBALEXECUTIONTRACKER_H
 
@@ -23,6 +11,7 @@
 #include "transportUnit.h"
 #include "timeSlot.h"
 #include "chromosome.h"
+#include "graspSolution.h"
 
 using namespace std;
 
@@ -53,6 +42,14 @@ public:
         const vector<Block*>& blocks,
         const vector<TransportUnit*>& vehicles,
         const TimeSlot& slot, 
+        const string& date
+    );
+    
+    void recordGraspSolution(
+        const GraspSolution& solution,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allVehicles,
+        const TimeSlot& slot,
         const string& date
     );
     

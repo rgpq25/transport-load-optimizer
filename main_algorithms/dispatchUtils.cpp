@@ -92,6 +92,89 @@ namespace DispatchUtils {
         return result;
     }
     
+    
+    vector<Dispatch> buildFromGrasp(
+        const GraspSolution& solution,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allVehicles,
+        Route* route,
+        const TimeSlot& slot,
+        const string& date
+    ) {
+        vector<Dispatch> result;
+
+        map<int, vector<Delivery*> > deliveriesPerTruck;
+        map<int, vector<Block*> > blocksPerTruck;
+
+        const map<int, TransportUnit*>& assignments = solution.getAssignments();
+
+        for (size_t i = 0; i < allDeliveries.size(); ++i) {
+            Delivery* d = allDeliveries[i];
+            int delId = d->getId();
+
+            if (assignments.count(delId) == 0) continue;
+
+            TransportUnit* truck = assignments.at(delId);
+            int truckId = truck->getId();
+
+            deliveriesPerTruck[truckId].push_back(d);
+
+            const vector<Block*>& bs = d->getBlocksToDeliver();
+            blocksPerTruck[truckId].insert(blocksPerTruck[truckId].end(), bs.begin(), bs.end());
+        }
+
+        for (map<int, vector<Delivery*> >::iterator it = deliveriesPerTruck.begin(); it != deliveriesPerTruck.end(); ++it) {
+            int truckId = it->first;
+            TransportUnit* truck = NULL;
+
+            for (size_t j = 0; j < allVehicles.size(); ++j) {
+                if (allVehicles[j]->getId() == truckId) {
+                    truck = allVehicles[j];
+                    break;
+                }
+            }
+            if (truck == NULL) continue;
+
+            const vector<Delivery*>& truckDeliveries = it->second;
+            const vector<Block*>& truckBlocks = blocksPerTruck[truckId];
+
+            // Filtrar placements y orientaciones solo para estos bloques
+            const vector<BlockPlacement>& allPlacements = solution.getPlacements();
+            const vector<int>& allOrientations = solution.getOrientations();
+
+            vector<BlockPlacement> filteredPlacements;
+            vector<int> filteredOrientations;
+
+            for (size_t i = 0; i < allPlacements.size(); ++i) {
+                const BlockPlacement& bp = allPlacements[i];
+                for (size_t j = 0; j < truckBlocks.size(); ++j) {
+                    if (truckBlocks[j]->getId() == bp.blockId) {
+                        filteredPlacements.push_back(bp);
+                        filteredOrientations.push_back(bp.orientation);
+                        break;
+                    }
+                }
+            }
+
+            Dispatch dispatch(
+                truck,
+                route,
+                slot,
+                date,
+                truckDeliveries,
+                truckBlocks,
+                filteredOrientations,
+                filteredPlacements
+            );
+
+            result.push_back(dispatch);
+        }
+
+        return result;
+    }
+    
+    
+    
     void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename) {
         ofstream file(filename);
         if (!file.is_open()) {
@@ -103,7 +186,8 @@ namespace DispatchUtils {
         file << "dispatch_id,truck_id,date,slot_start,slot_end,"
             << "truck_l,truck_w,truck_h,"
             << "block_id,orientation,x,y,z,lx,ly,lz\n";
-
+        
+        int disCounter = 1;
         for (int i = 0; i < dispatches.size(); ++i) {
             const Dispatch& d = dispatches[i];
             int truckId = d.getTruck()->getId();
@@ -112,13 +196,15 @@ namespace DispatchUtils {
             string end = d.getTimeSlot().getEndAsString();
 
             for (const auto& bp : d.getBlockPlacements()) {
-                file << i << "," << truckId << "," << date << ","
+                file << disCounter << "," << truckId << "," << date << ","
                     << start << "," << end << ","
                     << d.getTruck()->getLength() << "," << d.getTruck()->getWidth() << "," << d.getTruck()->getHeight() << ","
                     << bp.blockId << "," << bp.orientation << ","
                     << bp.x << "," << bp.y << "," << bp.z << ","
                     << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
             }
+            
+            disCounter = disCounter + 1;
         }
 
         file.close();

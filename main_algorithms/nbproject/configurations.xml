@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>GRASPOptimizer.h</itemPath>
       <itemPath>SAGAOptimizer.h</itemPath>
       <itemPath>bin3D.h</itemPath>
       <itemPath>block.h</itemPath>
@@ -14,7 +15,11 @@
       <itemPath>dispatch.h</itemPath>
       <itemPath>dispatchUtils.h</itemPath>
       <itemPath>globalExecutionTracker.h</itemPath>
+      <itemPath>graspPackingState.h</itemPath>
+      <itemPath>graspSolution.h</itemPath>
+      <itemPath>graspUtils.h</itemPath>
       <itemPath>input.h</itemPath>
+      <itemPath>layerCandidate.h</itemPath>
       <itemPath>order.h</itemPath>
       <itemPath>route.h</itemPath>
       <itemPath>routePoint.h</itemPath>
@@ -43,7 +48,10 @@
       </logicalFolder>
       <logicalFolder name="f4" displayName="grasp-algorithm" projectFiles="true">
         <itemPath>GRASPOptimizer.cpp</itemPath>
-        <itemPath>GRASPOptimizer.h</itemPath>
+        <itemPath>graspPackingState.cpp</itemPath>
+        <itemPath>graspSolution.cpp</itemPath>
+        <itemPath>graspUtils.cpp</itemPath>
+        <itemPath>layerCandidate.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="saga-algorithm" projectFiles="true">
         <itemPath>SAGAOptimizer.cpp</itemPath>
@@ -124,9 +132,25 @@
       </item>
       <item path="globalExecutionTracker.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="graspPackingState.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspPackingState.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="graspSolution.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspSolution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="graspUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="input.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="input.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="layerCandidate.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="layerCandidate.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -219,9 +243,25 @@
       </item>
       <item path="globalExecutionTracker.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="graspPackingState.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspPackingState.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="graspSolution.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspSolution.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="graspUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="graspUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="input.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="input.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="layerCandidate.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="layerCandidate.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>

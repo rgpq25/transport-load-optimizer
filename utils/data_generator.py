@@ -3,14 +3,15 @@ from datetime import datetime, timedelta
 
 random.seed(42)
 
-NUM_CLIENTS = 20
+NUM_CLIENTS = 2
 NUM_BLOCKS = 300
-NUM_VEHICLES = 8
+NUM_VEHICLES = 20
 NUM_ORDERS = 100
-MAX_DELIVERIES_PER_ORDER = 3
-MAX_BLOCKS_PER_DELIVERY = 5
-NUM_ROUTES = 6
+MAX_DELIVERIES_PER_ORDER = 1
+MAX_BLOCKS_PER_DELIVERY = 4
+NUM_ROUTES = 1
 TODAY = datetime(2024, 9, 21)
+END_DATE = datetime(2024, 9, 22)
 
 def generate_random_date(start_date, end_date):
     delta = end_date - start_date
@@ -94,9 +95,7 @@ def generate_orders(clients, available_blocks):
         for _ in range(num_deliveries):
             shift = random.choice(["morning", "afternoon", "null"])
 
-            start = datetime(2024, 9, 21)
-            end = datetime(2024, 10, 5)
-            due_date = generate_random_date(start, end)
+            due_date = generate_random_date(TODAY, END_DATE)
 
             num_blocks = random.randint(1, MAX_BLOCKS_PER_DELIVERY)
             blocks = []
@@ -156,4 +155,4 @@ orders = generate_orders(clients, available_block_ids)
 routes = generate_routes(clients, orders)  # Ahora depende de los pedidos
 
 # SAVE
-save_dataset(clients, blocks, vehicles, routes, orders, "../input/input_large.txt")
+save_dataset(clients, blocks, vehicles, routes, orders, "../input/input_test.txt")

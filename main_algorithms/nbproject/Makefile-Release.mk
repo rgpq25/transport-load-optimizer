@@ -46,7 +46,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/dispatch.o \
 	${OBJECTDIR}/dispatchUtils.o \
 	${OBJECTDIR}/globalExecutionTracker.o \
+	${OBJECTDIR}/graspPackingState.o \
+	${OBJECTDIR}/graspSolution.o \
+	${OBJECTDIR}/graspUtils.o \
 	${OBJECTDIR}/input.o \
+	${OBJECTDIR}/layerCandidate.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/order.o \
 	${OBJECTDIR}/route.o \
@@ -135,10 +139,30 @@ ${OBJECTDIR}/globalExecutionTracker.o: globalExecutionTracker.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/globalExecutionTracker.o globalExecutionTracker.cpp
 
+${OBJECTDIR}/graspPackingState.o: graspPackingState.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/graspPackingState.o graspPackingState.cpp
+
+${OBJECTDIR}/graspSolution.o: graspSolution.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/graspSolution.o graspSolution.cpp
+
+${OBJECTDIR}/graspUtils.o: graspUtils.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/graspUtils.o graspUtils.cpp
+
 ${OBJECTDIR}/input.o: input.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/input.o input.cpp
+
+${OBJECTDIR}/layerCandidate.o: layerCandidate.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/layerCandidate.o layerCandidate.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}

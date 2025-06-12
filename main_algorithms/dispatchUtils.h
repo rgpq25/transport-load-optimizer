@@ -3,8 +3,11 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <iostream>
 #include "dispatch.h"
 #include "chromosome.h"
+#include "graspSolution.h"
 #include "delivery.h"
 #include "transportUnit.h"
 #include "route.h"
@@ -15,6 +18,15 @@ namespace DispatchUtils {
         const Chromosome& chromosome,
         const vector<Delivery*>& deliveries,
         const vector<TransportUnit*>& vehicles,
+        Route* route,
+        const TimeSlot& slot,
+        const string& date
+    );
+    
+    vector<Dispatch> buildFromGrasp(
+        const GraspSolution& solution,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allVehicles,
         Route* route,
         const TimeSlot& slot,
         const string& date

@@ -1,23 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/class.h to edit this template
- */
-
-/* 
- * File:   GRASPOptimizer.h
- * Author: renzo
- *
- * Created on 7 de junio de 2025, 21:33
- */
-
 #ifndef GRASPOPTIMIZER_H
 #define GRASPOPTIMIZER_H
 
+#include <vector>
+#include "block.h"
+#include "transportUnit.h"
+#include "layerCandidate.h"
+#include "graspPackingState.h"
+
+using namespace std;
+
 class GRASPOptimizer {
 public:
-    GRASPOptimizer();
-private:
-
+    GraspPackingState constructPacking(
+        const vector<const Block*>& blocks,
+        const TransportUnit* truck,
+        double alpha
+    );
 };
 
 #endif /* GRASPOPTIMIZER_H */
