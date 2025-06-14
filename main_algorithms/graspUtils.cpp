@@ -12,49 +12,59 @@ namespace GraspUtils {
     ) {
         std::vector<LayerCandidate> candidates;
 
+        // Iterar por cada bloque para iniciar la construcción de una capa
         for (size_t i = 0; i < blocks.size(); ++i) {
             const Block* b1 = blocks[i];
 
             for (int o1 = 0; o1 <= 1; ++o1) {
                 double l1 = (o1 == 0) ? b1->getLength() : b1->getWidth();
                 double w1 = (o1 == 0) ? b1->getWidth() : b1->getLength();
+                double h1 = b1->getHeight();
 
                 if (l1 > maxLength || w1 > maxWidth) continue;
 
-                // Capa de un solo bloque
-                LayerCandidate single;
-                single.addBlock(b1, o1, 0.0, 0.0);
-                single.setScore(l1 * w1);  // volumen base
-                candidates.push_back(single);
+                LayerCandidate layer;
+                layer.addBlock(b1, o1, 0.0, 0.0);
+                double currentX = l1;
+                double maxY = w1;
+                double layerHeight = h1;
+                bool valid = true;
 
-                // Combinaciones con otros bloques
-                for (size_t j = i + 1; j < blocks.size(); ++j) {
+                // Intentar agregar más bloques consecutivos a la derecha (eje X)
+                for (size_t j = 0; j < blocks.size(); ++j) {
+                    if (j == i) continue;
                     const Block* b2 = blocks[j];
 
                     for (int o2 = 0; o2 <= 1; ++o2) {
                         double l2 = (o2 == 0) ? b2->getLength() : b2->getWidth();
                         double w2 = (o2 == 0) ? b2->getWidth() : b2->getLength();
+                        double h2 = b2->getHeight();
 
-                        // Intentamos colocarlos uno al lado del otro
-                        double totalL = l1 + l2;
-                        double maxW = std::max(w1, w2);
+                        // Restricción de espacio
+                        if (currentX + l2 > maxLength || w2 > maxWidth) continue;
 
-                        if (totalL <= maxLength && maxW <= maxWidth) {
-                            LayerCandidate layer;
-                            layer.addBlock(b1, o1, 0.0, 0.0);
-                            layer.addBlock(b2, o2, l1, 0.0);
+                        // Fragilidad: evitar poner más frágiles debajo
+                        if (b2->getFragility() > b1->getFragility()) continue;
 
-                            double score = (l1 * w1) + (l2 * w2);
-                            layer.setScore(score);
-                            candidates.push_back(layer);
-                        }
+                        // Añadir bloque a la capa
+                        layer.addBlock(b2, o2, currentX, 0.0);
+                        currentX += l2;
+                        maxY = std::max(maxY, w2);
+                        layerHeight = std::max(layerHeight, h2);
+
+                        break;  // Solo intentamos una orientación por bloque válido
                     }
                 }
+
+                layer.setHeight(layerHeight);
+                layer.setScore(currentX * maxY); // Volumen base como score
+                candidates.push_back(layer);
             }
         }
 
         return candidates;
     }
+
 
     std::vector<LayerCandidate> selectFromRCL(
         const std::vector<LayerCandidate>& candidates,

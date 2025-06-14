@@ -30,13 +30,21 @@ GraspPackingState GRASPOptimizer::constructPacking(
         int index = rand() % rcl.size();
         LayerCandidate selected = rcl[index];
 
-        // 4. Verificar si se puede colocar (por altura)
-        if (!state.canPlaceLayer(selected)) break;
+        bool placed = false;
 
-        if (!state.hasStructuralSupport(selected)) break;
-        
-        // 5. Agregarla al estado
-        state.placeLayer(selected);
+        for (size_t i = 0; i < rcl.size(); ++i) {
+            int index = rand() % rcl.size();
+            LayerCandidate candidate = rcl[index];
+
+            if (!state.canPlaceLayer(candidate)) continue;
+            //if (!state.hasStructuralSupport(candidate)) continue;
+
+            state.placeLayer(candidate);
+            placed = true;
+            break;
+        }
+
+        if (!placed) break;
     }
 
     return state;

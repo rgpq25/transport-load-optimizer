@@ -46,7 +46,7 @@ void printLog(const string& log, bool debug) {
 }
 
 int main(int argc, char** argv) {
-    string algorithmToRun = "grasp"; // "grasp" | "saga"
+    string algorithmToRun = "saga"; // "grasp" | "saga"
     bool debug = true;
    
     // SAGA Params
@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
                             GraspPackingState packing = optimizer.constructPacking(
                                 constBlocks,
                                 truck,
-                                0.5
+                                0.3
                             );
 
                             if (packing.getPlacedLayers().empty()) {
@@ -287,13 +287,14 @@ int main(int argc, char** argv) {
                                 const vector<Block*>& bs = d->getBlocksToDeliver();
 
                                 bool allIncluded = true;
+                                
                                 for (size_t j = 0; j < bs.size(); ++j) {
                                     if (usedBlockIds.count(bs[j]->getId()) == 0) {
                                         allIncluded = false;
                                         break;
                                     }
                                 }
-
+                                
                                 if (allIncluded) {
                                     graspSol.assignDelivery(d, truck);
                                     attendedDeliveries.push_back(d);
