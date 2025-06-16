@@ -22,7 +22,9 @@
 #include "block.h"
 #include "transportUnit.h"
 #include "timeSlot.h"
+
 #include "chromosome.h"
+#include "vehiclePattern.h"
 
 using namespace std;
 
@@ -53,6 +55,12 @@ public:
         const vector<Block*>& blocks,
         const vector<TransportUnit*>& vehicles,
         const TimeSlot& slot, 
+        const string& date
+    );
+    
+    void recordSolutionPattern(
+        const VehiclePattern& pattern,
+        const TimeSlot& slot,
         const string& date
     );
     

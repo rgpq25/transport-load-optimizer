@@ -92,6 +92,73 @@ namespace DispatchUtils {
         return result;
     }
     
+    vector<Dispatch> buildFromPattern(
+        const VehiclePattern& pattern,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allVehicles,
+        Route* route,
+        const TimeSlot& slot,
+        const string& date
+    ) {
+        vector<Dispatch> result;
+        TransportUnit* truck = pattern.vehicle;
+
+        // 1. Recolectar deliveries y bloques del pattern
+        vector<Delivery*> patDeliveries;
+        vector<Block*>     patBlocks;
+        vector<int>        patOrientations;
+        for (const auto& layer : pattern.layers) {
+            patDeliveries.push_back(layer.delivery);
+            for (size_t i = 0; i < layer.blocks.size(); ++i) {
+                patBlocks.push_back(layer.blocks[i]);
+                patOrientations.push_back(layer.orientations[i]);
+            }
+        }
+
+        // 2. Volver a ejecutar Bin3D para obtener posiciones
+        Bin3D bin(truck->getLength(), truck->getWidth(), truck->getHeight());
+        bool feasible = true;
+        for (size_t i = 0; i < patBlocks.size(); ++i) {
+            if (!bin.tryPlaceBlock(patBlocks[i], patOrientations[i])) {
+                feasible = false;
+                break;
+            }
+        }
+        if (!feasible) {
+            // No factible según el packer 3D, devolvemos vacío
+            return result;
+        }
+
+        // 3. Extraer placements de Bin3D
+        std::vector<BlockPlacement> placements;
+        for (const auto& pb : bin.getPlacedBoxes()) {
+            BlockPlacement bp;
+            bp.blockId     = pb.block->getId();
+            bp.orientation = pb.orientationIndex;
+            bp.x           = pb.position[0];
+            bp.y           = pb.position[1];
+            bp.z           = pb.position[2];
+            bp.lx          = pb.size[0];
+            bp.ly          = pb.size[1];
+            bp.lz          = pb.size[2];
+            placements.push_back(bp);
+        }
+
+        // 4. Crear el Dispatch y devolverlo
+        Dispatch dispatch(
+            truck,
+            route,
+            slot,
+            date,
+            patDeliveries,
+            patBlocks,
+            patOrientations,
+            placements
+        );
+        result.push_back(dispatch);
+        return result;
+    };
+    
     void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename) {
         ofstream file(filename);
         if (!file.is_open()) {
@@ -104,6 +171,7 @@ namespace DispatchUtils {
             << "truck_l,truck_w,truck_h,"
             << "block_id,orientation,x,y,z,lx,ly,lz\n";
 
+        int counter = 1;
         for (int i = 0; i < dispatches.size(); ++i) {
             const Dispatch& d = dispatches[i];
             int truckId = d.getTruck()->getId();
@@ -112,13 +180,14 @@ namespace DispatchUtils {
             string end = d.getTimeSlot().getEndAsString();
 
             for (const auto& bp : d.getBlockPlacements()) {
-                file << i << "," << truckId << "," << date << ","
+                file << counter << "," << truckId << "," << date << ","
                     << start << "," << end << ","
                     << d.getTruck()->getLength() << "," << d.getTruck()->getWidth() << "," << d.getTruck()->getHeight() << ","
                     << bp.blockId << "," << bp.orientation << ","
                     << bp.x << "," << bp.y << "," << bp.z << ","
                     << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
             }
+            counter += 1;
         }
 
         file.close();

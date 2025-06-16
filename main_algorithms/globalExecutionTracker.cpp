@@ -70,6 +70,31 @@ void GlobalExecutionTracker::recordSolution(
     }
 }
 
+void GlobalExecutionTracker::recordSolutionPattern(
+    const VehiclePattern& pattern,
+    const TimeSlot& slot,
+    const string& date
+) {
+    // 1. Reservar el vehículo
+    int vehicleId = pattern.vehicle->getId();
+    reserveVehicle(vehicleId, slot, date);
+
+    // 2. Marcar entregas y bloques como usados
+    for (const auto& layer : pattern.layers) {
+        // Delivery
+        int deliveryId = layer.delivery->getId();
+        if (!isDeliveryFulfilled(deliveryId)) {
+            markDeliveryFulfilled(deliveryId);
+        }
+        // Bloques de esa entrega
+        for (Block* b : layer.blocks) {
+            int blockId = b->getId();
+            if (!isBlockUsed(blockId)) {
+                markBlockUsed(blockId);
+            }
+        }
+    }
+};
 
 vector<int> GlobalExecutionTracker::getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const {
     vector<int> result;

@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/GRASPOptimizer.o \
 	${OBJECTDIR}/SAGAOptimizer.o \
+	${OBJECTDIR}/alphaReactive.o \
 	${OBJECTDIR}/bin3D.o \
 	${OBJECTDIR}/block.o \
 	${OBJECTDIR}/chromosome.o \
@@ -47,13 +48,16 @@ OBJECTFILES= \
 	${OBJECTDIR}/dispatchUtils.o \
 	${OBJECTDIR}/globalExecutionTracker.o \
 	${OBJECTDIR}/input.o \
+	${OBJECTDIR}/layerCandidate.o \
 	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/maximalSpace.o \
 	${OBJECTDIR}/order.o \
 	${OBJECTDIR}/route.o \
 	${OBJECTDIR}/routePoint.o \
 	${OBJECTDIR}/timeSlot.o \
 	${OBJECTDIR}/timeSlotUtils.o \
-	${OBJECTDIR}/transportUnit.o
+	${OBJECTDIR}/transportUnit.o \
+	${OBJECTDIR}/vehiclePattern.o
 
 
 # C Compiler Flags
@@ -89,6 +93,11 @@ ${OBJECTDIR}/SAGAOptimizer.o: SAGAOptimizer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SAGAOptimizer.o SAGAOptimizer.cpp
+
+${OBJECTDIR}/alphaReactive.o: alphaReactive.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/alphaReactive.o alphaReactive.cpp
 
 ${OBJECTDIR}/bin3D.o: bin3D.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -140,10 +149,20 @@ ${OBJECTDIR}/input.o: input.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/input.o input.cpp
 
+${OBJECTDIR}/layerCandidate.o: layerCandidate.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/layerCandidate.o layerCandidate.cpp
+
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/maximalSpace.o: maximalSpace.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/maximalSpace.o maximalSpace.cpp
 
 ${OBJECTDIR}/order.o: order.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -174,6 +193,11 @@ ${OBJECTDIR}/transportUnit.o: transportUnit.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/transportUnit.o transportUnit.cpp
+
+${OBJECTDIR}/vehiclePattern.o: vehiclePattern.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vehiclePattern.o vehiclePattern.cpp
 
 # Subprojects
 .build-subprojects:

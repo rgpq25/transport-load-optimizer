@@ -10,8 +10,9 @@
 #include "dispatch.h"
 
 #include "SAGAOptimizer.h"
-#include "globalExecutionTracker.h"
+#include "GRASPOptimizer.h"
 
+#include "globalExecutionTracker.h"
 #include "deliveryUtils.h"
 #include "timeSlotUtils.h"
 #include "dispatchUtils.h"
@@ -52,7 +53,7 @@ int main(int argc, char** argv) {
     
     
     Input input;
-    input.loadFromFile("../input/input_large.txt");
+    input.loadFromFile("../input/input_test_small.txt");
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
@@ -209,7 +210,48 @@ int main(int argc, char** argv) {
                         printLog("           SAGA RESULT = " + to_string(best.getFitness()), debug);
                     } 
                     else if (algorithmToRun == "grasp") {
-                        printLog("           NOT IMPLEMENTED YET!!!", debug);
+                        // 1. Instanciar el optimizador GRASP
+                        GRASPOptimizer optimizer(
+                            finalDeliveries,
+                            blocksForThisBatch,
+                            availableVehicles,
+                            const_cast<Route*>(&route),
+                            ts,
+                            dueDate,
+                            /*graspIterations=*/100, 
+                            /*Kpercent=*/20.0, 
+                            /*alphaSet =*/{ 0.7, 1.0 }
+                        );
+
+                        // 2. Ejecutar GRASP y obtener patrones de vehículo
+                        auto patterns = optimizer.run();
+
+                        // 3. Registrar cada patrón y construir los dispatches
+                        for (auto& pat : patterns) {
+                            // Marca entregas y bloques en el tracker
+                            tracker.recordSolutionPattern(pat, ts, dueDate);
+
+                            // Convierte el VehiclePattern en Dispatches
+                            auto dispatches = DispatchUtils::buildFromPattern(
+                                pat,
+                                finalDeliveries,
+                                availableVehicles,
+                                const_cast<Route*>(&route),
+                                ts,
+                                dueDate
+                            );
+                            finalDispatches.insert(
+                                finalDispatches.end(),
+                                dispatches.begin(),
+                                dispatches.end()
+                            );
+                        }
+                        printLog(
+                            "           GRASP complete, generated " +
+                            std::to_string(patterns.size()) +
+                            " vehicle patterns",
+                            debug
+                        );
                     }
                 }
             }
@@ -235,12 +277,12 @@ int main(int argc, char** argv) {
         d.printSummary();
     }
     
-    /*
+    
     DispatchUtils::exportDispatchesToCSV(
         finalDispatches, 
         "../output/output_dispatches.csv"
     );
-    */
+    
     
     cout << endl << "=========== DELIVERIES NOT ATTENDED ===========" 
             << endl;
