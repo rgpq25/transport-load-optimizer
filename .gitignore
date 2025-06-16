@@ -1,7 +1,8 @@
-# For both C++ projects
+# For C++ project
 build
 dist
 .dep.inc
+main_algorithms/nbproject/private
 
 # For repo purposes
 output
