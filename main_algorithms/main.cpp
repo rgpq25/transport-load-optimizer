@@ -42,18 +42,26 @@ void printLog(const string& log, bool debug) {
 }
 
 int main(int argc, char** argv) {
-    string algorithmToRun = "grasp"; // "grasp" | "saga"
-    bool debug = true;
-   
-    // SAGA Params
+    string algorithmToRun = "saga"; // "grasp" | "saga"
+    bool debug = false;
+    
     int unloadingTime = 20;
     int timeSlotInterval = 30;
+   
+    // SAGA Params
+    int T_init = 50;
+    int T_min= 1;
+    double alpha = 0.95;
+    int populationSize= 30;
     
     // GRASP Params
+    int graspIterations = 300;
+    double Kpercent = 70.0;
+    vector<double> alphaSet = { 0.1, 0.4 };
     
     
     Input input;
-    input.loadFromFile("../input/input_test_small.txt");
+    input.loadFromFile("../input/input_large.txt");
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
@@ -62,6 +70,10 @@ int main(int argc, char** argv) {
     vector<Dispatch> finalDispatches;
     vector<string> uniqueDueDates = input.getUniqueDueDates();
     vector<Delivery*> deliveries = input.getAllDeliveriesFromOrders();
+    vector<TransportUnit*> allVehicles;
+    for (TransportUnit& unit : input.getTransportUnits()) {
+        allVehicles.push_back(&unit);
+    }
     
     // Filter 1: By date
     for(const string& dueDate : uniqueDueDates) {
@@ -146,10 +158,6 @@ int main(int argc, char** argv) {
                     if (finalDeliveries.empty() || blocksForThisBatch.empty()) continue;
 
                     // 3. Filter available vehicles for this time slot
-                    vector<TransportUnit*> allVehicles;
-                    for (TransportUnit& unit : input.getTransportUnits()) {
-                        allVehicles.push_back(&unit);
-                    }
                     vector<TransportUnit*> availableVehicles = tracker.getAvailableVehicles(allVehicles, ts, dueDate);
                     if (availableVehicles.empty()) continue;
                     
@@ -182,10 +190,10 @@ int main(int argc, char** argv) {
                             availableVehicles,
                             const_cast<Route*>(&route),
                             ts,
-                            /*T_init=*/1000, 
-                            /*T_min=*/1, 
-                            /*alpha=*/0.95, 
-                            /*populationSize=*/30
+                            T_init, 
+                            T_min, 
+                            alpha, 
+                            populationSize
                         );
 
                         Chromosome best = optimizer.run(matchesSelected);
@@ -218,20 +226,16 @@ int main(int argc, char** argv) {
                             const_cast<Route*>(&route),
                             ts,
                             dueDate,
-                            /*graspIterations=*/100, 
-                            /*Kpercent=*/20.0, 
-                            /*alphaSet =*/{ 0.7, 1.0 }
+                            graspIterations, 
+                            Kpercent, 
+                            alphaSet
                         );
 
-                        // 2. Ejecutar GRASP y obtener patrones de vehículo
+                        // 1) Ejecutar GRASP y obtener patrones de vehículo
                         auto patterns = optimizer.run();
 
-                        // 3. Registrar cada patrón y construir los dispatches
-                        for (auto& pat : patterns) {
-                            // Marca entregas y bloques en el tracker
-                            tracker.recordSolutionPattern(pat, ts, dueDate);
-
-                            // Convierte el VehiclePattern en Dispatches
+                        // 2) Para cada patrón, generar Dispatch(es)
+                        for (const auto& pat : patterns) {
                             auto dispatches = DispatchUtils::buildFromPattern(
                                 pat,
                                 finalDeliveries,
@@ -240,18 +244,33 @@ int main(int argc, char** argv) {
                                 ts,
                                 dueDate
                             );
-                            finalDispatches.insert(
-                                finalDispatches.end(),
-                                dispatches.begin(),
-                                dispatches.end()
-                            );
+
+                            // 3) SOLO si buildFromPattern devolvió dispatches válidos:
+                            if (!dispatches.empty()) {
+                                // 3.a) Marcar en el tracker SOLO los deliveries que realmente se despacharon
+                                for (const auto& d : dispatches) {
+                                    for (Delivery* dd : d.getDeliveries()) {
+                                        if (!tracker.isDeliveryFulfilled(dd->getId())) {
+                                            tracker.markDeliveryFulfilled(dd->getId());
+                                            for (Block* b : d.getBlocks()) {
+                                                tracker.markBlockUsed(b->getId());
+                                            }
+                                            tracker.reserveVehicle(
+                                                d.getTruck()->getId(),
+                                                d.getTimeSlot(),
+                                                d.getDate()
+                                            );
+                                        }
+                                    }
+                                }
+                                // 3.b) Añadir esos dispatches al plan final
+                                finalDispatches.insert(
+                                    finalDispatches.end(),
+                                    dispatches.begin(),
+                                    dispatches.end()
+                                );
+                            }
                         }
-                        printLog(
-                            "           GRASP complete, generated " +
-                            std::to_string(patterns.size()) +
-                            " vehicle patterns",
-                            debug
-                        );
                     }
                 }
             }
@@ -276,6 +295,9 @@ int main(int argc, char** argv) {
         cout << "Dispatch ID: " << disCounter << endl;
         d.printSummary();
     }
+    
+    cout << endl << "======== FITNESS OF SOLUTION ==========" << endl;
+    cout << DispatchUtils::evaluateDispatchesFitness(finalDispatches, deliveries, allVehicles) << endl;
     
     
     DispatchUtils::exportDispatchesToCSV(

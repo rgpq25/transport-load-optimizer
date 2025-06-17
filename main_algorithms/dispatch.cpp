@@ -64,3 +64,14 @@ string Dispatch::getDate() const { return date; }
 const vector<Delivery*>& Dispatch::getDeliveries() const { return deliveries; }
 const vector<Block*>& Dispatch::getBlocks() const { return blocks; }
 const vector<BlockPlacement>& Dispatch::getBlockPlacements() const { return blockPlacements; }
+
+double Dispatch::getVolumeOccupation() const {
+    double truckVolume = this->truck->getVolume();
+    double blocksVolume = 0.0;
+    
+    for(const Block* b: this->blocks) {
+        blocksVolume = blocksVolume + b->getVolume();
+    }
+    
+    return 100 * (blocksVolume / truckVolume);
+};

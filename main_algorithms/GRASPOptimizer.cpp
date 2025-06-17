@@ -3,6 +3,9 @@
 #include <cmath>
 #include <limits>
 #include <cstdlib>
+#include <unordered_map>
+#include <unordered_set>
+#include "bin3D.h"
 
 GRASPOptimizer::GRASPOptimizer(
     const vector<Delivery*>& deliveries,
@@ -164,8 +167,10 @@ vector<VehiclePattern> GRASPOptimizer::run() {
                 E = generateInitialSpaces(ve);
             }
 
+            double fitCurr = evaluateSolutionFitness({CurrentPattern});
+            double fitBest = evaluateSolutionFitness({BestVehiclePattern});
             // 4.4 Actualizar mejor patrón si CurrentPattern es mejor
-            if (CurrentPattern.usedVolume() > BestVehiclePattern.usedVolume()) {
+            if (fitCurr > fitBest) {
                 BestVehiclePattern = CurrentPattern;
             }
 
@@ -205,22 +210,33 @@ vector<MaximalSpace> GRASPOptimizer::generateInitialSpaces(TransportUnit* truck)
 }
 
 vector<LayerCandidate> GRASPOptimizer::generateLayers(const MaximalSpace& e, Delivery* d) {
+    vector<Block*>& blocks = const_cast<vector<Block*>&>(d->getBlocksToDeliver());
     vector<LayerCandidate> candidates;
-    const auto& blocks = d->getBlocksToDeliver();
+    if (blocks.empty()) return candidates;
+
+    // 1) Orientación 0: longitud en X = suma de lengths, ancho en Y = max widths
+    double sumLen = 0, maxWid = 0, maxHei = 0;
     for (Block* b : blocks) {
-        double h = b->getHeight();
-        double l = b->getLength();
-        double w = b->getWidth();
-        vector<pair<double,double>> orients = {{l,w}, {w,l}};
-        for (int ori = 0; ori < 2; ++ori) {
-            double fpLen = orients[ori].first;
-            double fpWid = orients[ori].second;
-            if (fpLen <= e.length && fpWid <= e.width) {
-                LayerCandidate lc(d, {b}, {ori}, fpLen, fpWid, h);
-                candidates.push_back(lc);
-            }
-        }
+        sumLen += b->getLength();
+        maxWid = max(maxWid, b->getWidth());
+        maxHei = max(maxHei, b->getHeight());
     }
+    if (sumLen <= e.length && maxWid <= e.width) {
+        vector<int> orients(blocks.size(), 0);
+        candidates.emplace_back(d, blocks, orients, sumLen, maxWid, maxHei);
+    }
+
+    // 2) Orientación 1: longitud en X = suma de widths, ancho en Y = max lengths
+    double sumLen1 = 0, maxWid1 = 0;
+    for (Block* b : blocks) {
+        sumLen1 += b->getWidth();
+        maxWid1 = max(maxWid1, b->getLength());
+    }
+    if (sumLen1 <= e.length && maxWid1 <= e.width) {
+        vector<int> orients(blocks.size(), 1);
+        candidates.emplace_back(d, blocks, orients, sumLen1, maxWid1, maxHei);
+    }
+
     return candidates;
 }
 
@@ -337,3 +353,97 @@ vector<LayerCandidate> GRASPOptimizer::removeKPercent(VehiclePattern& pattern) {
     return removedLayers;
 }
 
+double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& patterns) const {
+    // 1) Acumular prioridad total
+    int totalPriority = 0;
+    for (Delivery* d : LP) {
+        totalPriority += d->getPriority();
+    }
+
+    // 2) Mapear vehículo → bloques, volúmenes y pesos usados
+    unordered_map<int, vector<Block*>> vehicleBlocks;
+    unordered_map<int, double> vehicleVolumeUsed;
+    unordered_map<int, double> vehicleWeightUsed;
+    unordered_set<int> usedVehicles;
+
+    // 3) Contar deliveries atendidos (únicos) y prioridad cubierta
+    unordered_set<int> seenDeliveries;
+    int numDeliveriesAssigned = 0;
+    int attendedPriority    = 0;
+
+    for (const auto& pat : patterns) {
+        // Encontrar índice del vehículo en V
+        int vIdx = int(find(V.begin(), V.end(), pat.vehicle) - V.begin());
+        usedVehicles.insert(vIdx);
+
+        for (const auto& layer : pat.layers) {
+            Delivery* d = layer.delivery;
+            int did = d->getId();
+            // Sólo contar cada delivery una vez
+            if (seenDeliveries.insert(did).second) {
+                numDeliveriesAssigned++;
+                attendedPriority += d->getPriority();
+            }
+            // Registrar bloques, volumen y peso
+            for (Block* b : layer.blocks) {
+                vehicleBlocks[vIdx].push_back(b);
+                double vol = b->getHeight() * b->getWidth() * b->getLength();
+                vehicleVolumeUsed[vIdx] += vol;
+                vehicleWeightUsed[vIdx] += b->getWeight();
+            }
+        }
+    }
+
+    // 4) Comprobación de factibilidad 3D (igual que en SAGA)
+    for (int vIdx : usedVehicles) {
+        TransportUnit* vehicle = V[vIdx];
+        Bin3D bin(vehicle->getLength(), vehicle->getWidth(), vehicle->getHeight());
+        // Asumimos que las orientaciones usadas están guardadas en pat.layers
+        for (Block* b : vehicleBlocks[vIdx]) {
+            // Aquí deberías recuperar la orientación correspondiente;
+            // si no la almacenas, asume una orientación fija o extiéndelo.
+            int ori = 0;  
+            if (!bin.tryPlaceBlock(b, ori)) {
+                return 0.0;  // Empaque inviable
+            }
+        }
+    }
+
+    // 5) Calcular score y penalizaciones
+    double totalUtilizationScore = 0.0;
+    double overcapacityPenalty   = 0.0;
+
+    for (int vIdx : usedVehicles) {
+        TransportUnit* vehicle = V[vIdx];
+        double maxVol = vehicle->getLength() * vehicle->getWidth() * vehicle->getHeight();
+        double usedVol = vehicleVolumeUsed[vIdx];
+        double usedW   = vehicleWeightUsed[vIdx];
+        double util   = usedVol / maxVol;
+        totalUtilizationScore += util;
+        if (usedW > vehicle->getMaxWeight()) {
+            overcapacityPenalty += (usedW - vehicle->getMaxWeight()) * 10.0;
+        }
+    }
+
+    int numVehiclesUsed = (int)usedVehicles.size();
+    double avgUtilization   = numVehiclesUsed ? totalUtilizationScore / numVehiclesUsed : 0.0;
+    double fulfillmentRatio = LP.empty() ? 0.0 : (double)numDeliveriesAssigned / LP.size();
+    double priorityCoverage = totalPriority ? (double)attendedPriority / totalPriority : 0.0;
+
+    // 6) Combinar según los mismos pesos A…E de SAGA
+    const double A = 0.5; // penaliza nº camiones
+    const double B = 0.5; // recompensa utilización
+    const double C = 1.0; // penaliza sobrepeso
+    const double D = 1.0; // recompensa ratio de entregas
+    const double E = 1.0; // recompensa coverage de prioridad
+
+    double truckScore = V.empty() ? 0.0 : 1.0 - double(numVehiclesUsed) / V.size();
+    double fitness =
+        A * truckScore +
+        B * avgUtilization -
+        C * overcapacityPenalty +
+        D * fulfillmentRatio +
+        E * priorityCoverage;
+
+    return fitness;
+}

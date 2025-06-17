@@ -49,6 +49,7 @@ public:
     const vector<Delivery*>& getDeliveries() const;
     const vector<Block*>& getBlocks() const;
     const vector<BlockPlacement>& getBlockPlacements() const;
+    double getVolumeOccupation() const;
 };
 
 #endif /* DISPATCH_H */

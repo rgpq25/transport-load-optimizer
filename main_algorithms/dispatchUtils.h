@@ -33,6 +33,12 @@ namespace DispatchUtils {
     );
     
     void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename);
+    
+    double evaluateDispatchesFitness(
+        const vector<Dispatch>& dispatches,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allTransportUnits
+    );
 }
 
 #endif /* DISPATCHUTILS_H */

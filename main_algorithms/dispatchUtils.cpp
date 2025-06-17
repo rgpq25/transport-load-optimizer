@@ -3,6 +3,8 @@
 #include "bin3D.h"
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace DispatchUtils {
     vector<Dispatch> buildFromChromosome(
@@ -192,5 +194,90 @@ namespace DispatchUtils {
 
         file.close();
         cout << "[CSV] Exported " << dispatches.size() << " dispatches to " << filename << endl;
+    }
+
+    double evaluateDispatchesFitness(
+        const vector<Dispatch>& dispatches,
+        const vector<Delivery*>& allDeliveries,
+        const vector<TransportUnit*>& allTransportUnits
+    ) {
+        // 0) Construir mapa truckId -> TransportUnit*
+        unordered_map<int, TransportUnit*> truckMap;
+        truckMap.reserve(dispatches.size());
+        for (const auto& disp : dispatches) {
+            int tid = disp.getTruck()->getId();
+            truckMap[tid] = disp.getTruck();
+        }
+    
+        // 1) Prioridad total
+        int totalPriority = 0;
+        for (auto* d : allDeliveries) {
+            totalPriority += d->getPriority();
+        }
+
+        // 2) Recoger datos por vehículo
+        unordered_map<int, double> volumeUsedByTruck;
+        unordered_map<int, double> weightUsedByTruck;
+        unordered_set<int> usedVehicles;
+
+        // 3) Contar deliveries atendidos y prioridad cubierta
+        unordered_set<int> seenDeliveries;
+        int numDeliveriesAssigned = 0;
+        int attendedPriority    = 0;
+
+        for (const auto& disp : dispatches) {
+            int truckId = disp.getTruck()->getId();
+            usedVehicles.insert(truckId);
+
+            for (Delivery* d : disp.getDeliveries()) {
+                int did = d->getId();
+                if (seenDeliveries.insert(did).second) {
+                    numDeliveriesAssigned++;
+                    attendedPriority += d->getPriority();
+                }
+            }
+
+            for (Block* b : disp.getBlocks()) {
+                volumeUsedByTruck[truckId] += b->getVolume();
+                weightUsedByTruck[truckId] += b->getWeight();
+            }
+        }
+
+        // 4) Calcular scores y penalizaciones
+        double totalUtilScore   = 0.0;
+        double overcapPenalty   = 0.0;
+
+        for (int truckId : usedVehicles) {
+            TransportUnit* veh = truckMap[truckId];
+            double maxVol = veh->getLength() * veh->getWidth() * veh->getHeight();
+            double usedVol = volumeUsedByTruck[truckId];
+            double usedW   = weightUsedByTruck[truckId];
+
+            totalUtilScore += usedVol / maxVol;
+            if (usedW > veh->getMaxWeight()) {
+                overcapPenalty += (usedW - veh->getMaxWeight()) * 10.0;
+            }
+        }
+
+        int nVeh = (int)usedVehicles.size();
+        double avgUtil   = nVeh ? totalUtilScore / nVeh : 0.0;
+        double fulfill   = allDeliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / allDeliveries.size();
+        double prioCov   = totalPriority ? (double)attendedPriority / totalPriority : 0.0;
+
+        // Parámetros idénticos a SAGA
+        const double A = 0.5;  // penaliza nº camiones
+        const double B = 0.5;  // recompensa utilización
+        const double C = 1.0;  // penaliza sobrepeso
+        const double D = 1.0;  // recompensa ratio de entregas
+        const double E = 1.0;  // recompensa cobertura de prioridad
+
+        // Camiones totales originales
+        double truckScore = (allTransportUnits.empty()) ? 0.0 : (1.0 - (double(nVeh) / allTransportUnits.size()));
+
+        return A * truckScore
+             + B * avgUtil
+             - C * overcapPenalty
+             + D * fulfill
+             + E * prioCov;
     }
 }

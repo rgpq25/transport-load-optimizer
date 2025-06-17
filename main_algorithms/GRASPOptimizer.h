@@ -50,6 +50,7 @@ private:
     LayerCandidate              selectBestFit(const vector<LayerCandidate>& layers);
     void                        locateLayer(const LayerCandidate& sp, MaximalSpace& e, vector<MaximalSpace>& spacesOut);
     vector<LayerCandidate>      removeKPercent(VehiclePattern& pattern);
+    double evaluateSolutionFitness(const vector<VehiclePattern>& patterns) const;
 };
 
 #endif /* GRASPOPTIMIZER_H */

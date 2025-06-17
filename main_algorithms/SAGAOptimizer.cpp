@@ -1,15 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/class.cc to edit this template
- */
-
-/* 
- * File:   SAGAOptimizer.cpp
- * Author: renzo
- * 
- * Created on 12 de mayo de 2025, 15:59
- */
-
 #include "SAGAOptimizer.h"
 #include "bin3D.h"
 #include <cstdlib>
