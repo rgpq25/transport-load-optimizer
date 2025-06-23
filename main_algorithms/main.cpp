@@ -41,8 +41,19 @@ void printLog(const string& log, bool debug) {
     if (debug == true) cout << log << endl;
 }
 
+
+bool isDebugMatch(const string& dueDate, int routeId, const string& shift) {
+    bool isMatch =
+        dueDate == "2024-09-28" && 
+        routeId == 4 && 
+        shift == "morning";
+    
+    return isMatch;
+}
+
+
 int main(int argc, char** argv) {
-    string algorithmToRun = "saga"; // "grasp" | "saga"
+    string algorithmToRun = "grasp"; // "grasp" | "saga"
     bool debug = false;
     
     int unloadingTime = 20;
@@ -55,13 +66,13 @@ int main(int argc, char** argv) {
     int populationSize= 30;
     
     // GRASP Params
-    int graspIterations = 300;
-    double Kpercent = 70.0;
-    vector<double> alphaSet = { 0.1, 0.4 };
+    int graspIterations = 100;
+    double Kpercent = 30;
+    vector<double> alphaSet = { 0.1, 0.5 };
     
     
     Input input;
-    input.loadFromFile("../input/input_large.txt");
+    input.loadFromFile("../input/documented_test.txt");
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
@@ -162,12 +173,8 @@ int main(int argc, char** argv) {
                     if (availableVehicles.empty()) continue;
                     
                     
-                    // SELECTING AN ITERATION FOR DEBUG
-                    bool matchesSelected = 
-                                1 == 2 &&
-                                dueDate == "2024-09-28" && 
-                                route.getId() == 4 && 
-                                shift == "morning";
+                    // [DEBUG]
+                    bool matchesSelected = isDebugMatch(dueDate, route.getId(), shift);
                     
                     if (matchesSelected == true) {
                         cout << "[DEBUG] - Check deliveries" << endl;
@@ -232,7 +239,7 @@ int main(int argc, char** argv) {
                         );
 
                         // 1) Ejecutar GRASP y obtener patrones de vehículo
-                        auto patterns = optimizer.run();
+                        auto patterns = optimizer.run(matchesSelected);
 
                         // 2) Para cada patrón, generar Dispatch(es)
                         for (const auto& pat : patterns) {
@@ -283,13 +290,11 @@ int main(int argc, char** argv) {
             << ") ===========" << endl;
     int disCounter = 0;
     for (const Dispatch& d : finalDispatches) {
-        bool matchesSelected = d.getDate() == "2024-09-28" && 
-                                d.getRoute()->getId() == 4 && 
-                                d.getTimeSlot().getStartAsString() == "08:00" &&
-                                d.getTimeSlot().getEndAsString() == "10:17";
-        
         disCounter = disCounter + 1;
         
+        bool matchesSelected = d.getDate() == "2024-09-28" && 
+                               d.getRoute()->getId() == 4 &&
+                               d.getTimeSlot().getStart() < 840;        
         //if (matchesSelected == false) continue;
         
         cout << "Dispatch ID: " << disCounter << endl;

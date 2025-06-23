@@ -61,7 +61,7 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
     int summaryStep = max(1, totalIterationsEstimate / 19); // 20 points → 19 gaps
     
     if (printDebug == true) {
-        debugFile.open("saga_debug_log.csv");
+        debugFile.open("../output/saga_debug_log.csv");
         debugFile << "Temperatura,Fitness promedio,Mejor fitness poblacion,Mejor fitness global,Duracion (s)\n";
     }
     

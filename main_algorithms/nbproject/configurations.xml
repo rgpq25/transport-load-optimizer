@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>GRASPOptimizer.h</itemPath>
       <itemPath>SAGAOptimizer.h</itemPath>
+      <itemPath>alphaReactive.h</itemPath>
       <itemPath>bin3D.h</itemPath>
       <itemPath>block.h</itemPath>
       <itemPath>chromosome.h</itemPath>
@@ -16,12 +17,15 @@
       <itemPath>dispatchUtils.h</itemPath>
       <itemPath>globalExecutionTracker.h</itemPath>
       <itemPath>input.h</itemPath>
+      <itemPath>layerCandidate.h</itemPath>
+      <itemPath>maximalSpace.h</itemPath>
       <itemPath>order.h</itemPath>
       <itemPath>route.h</itemPath>
       <itemPath>routePoint.h</itemPath>
       <itemPath>timeSlot.h</itemPath>
       <itemPath>timeSlotUtils.h</itemPath>
       <itemPath>transportUnit.h</itemPath>
+      <itemPath>vehiclePattern.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -45,13 +49,9 @@
       <logicalFolder name="f4" displayName="grasp-algorithm" projectFiles="true">
         <itemPath>GRASPOptimizer.cpp</itemPath>
         <itemPath>alphaReactive.cpp</itemPath>
-        <itemPath>alphaReactive.h</itemPath>
         <itemPath>layerCandidate.cpp</itemPath>
-        <itemPath>layerCandidate.h</itemPath>
         <itemPath>maximalSpace.cpp</itemPath>
-        <itemPath>maximalSpace.h</itemPath>
         <itemPath>vehiclePattern.cpp</itemPath>
-        <itemPath>vehiclePattern.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="saga-algorithm" projectFiles="true">
         <itemPath>SAGAOptimizer.cpp</itemPath>

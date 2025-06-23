@@ -29,7 +29,7 @@ public:
     );
 
     // Ejecuta todo el Algorithm 4 y devuelve patrones para cada vehículo
-    vector<VehiclePattern> run();
+    vector<VehiclePattern> run(bool debug);
 
 private:
     // Datos de entrada y parámetros
