@@ -43,6 +43,7 @@ void printLog(const string& log, bool debug) {
 
 
 bool isDebugMatch(const string& dueDate, int routeId, const string& shift) {
+    return false;
     bool isMatch =
         dueDate == "2024-09-28" && 
         routeId == 4 && 
@@ -53,7 +54,7 @@ bool isDebugMatch(const string& dueDate, int routeId, const string& shift) {
 
 
 int main(int argc, char** argv) {
-    string algorithmToRun = "grasp"; // "grasp" | "saga"
+    string algorithmToRun = "saga"; // "grasp" | "saga"
     bool debug = false;
     
     int unloadingTime = 20;
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
     
     
     Input input;
-    input.loadFromFile("../input/documented_test.txt");
+    input.loadFromFile("../input/input_test_small.txt");
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
