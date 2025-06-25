@@ -272,15 +272,7 @@ int main(int argc, char** argv) {
                         );
 
                         Chromosome best = optimizer.run(matchesSelected);
-                        tracker.recordSolution(
-                            best, 
-                            finalDeliveries, 
-                            blocksForThisBatch, 
-                            availableVehicles, 
-                            ts, 
-                            dueDate
-                        );
-
+                        
                         vector<Dispatch> dispatches = DispatchUtils::buildFromChromosome(
                             best, 
                             finalDeliveries, 
@@ -289,11 +281,11 @@ int main(int argc, char** argv) {
                             ts, 
                             dueDate
                         );
+                        
+                        tracker.recordDispatchSolution(dispatches);
                         finalDispatches.insert(finalDispatches.end(), dispatches.begin(), dispatches.end());
-                        printLog("           SAGA RESULT = " + to_string(best.getFitness()), debug);
                     } 
                     else if (algorithmToRun == "GRASP") {
-                        // 1. Instanciar el optimizador GRASP
                         GRASPOptimizer optimizer(
                             finalDeliveries,
                             blocksForThisBatch,
@@ -306,10 +298,8 @@ int main(int argc, char** argv) {
                             alphaSet
                         );
 
-                        // 1) Ejecutar GRASP y obtener patrones de vehículo
                         auto patterns = optimizer.run(matchesSelected);
 
-                        // 2) Para cada patrón, generar Dispatch(es)
                         for (const auto& pat : patterns) {
                             auto dispatches = DispatchUtils::buildFromPattern(
                                 pat,
@@ -320,31 +310,12 @@ int main(int argc, char** argv) {
                                 dueDate
                             );
 
-                            // 3) SOLO si buildFromPattern devolvió dispatches válidos:
-                            if (!dispatches.empty()) {
-                                // 3.a) Marcar en el tracker SOLO los deliveries que realmente se despacharon
-                                for (const auto& d : dispatches) {
-                                    for (Delivery* dd : d.getDeliveries()) {
-                                        if (!tracker.isDeliveryFulfilled(dd->getId())) {
-                                            tracker.markDeliveryFulfilled(dd->getId());
-                                            for (Block* b : d.getBlocks()) {
-                                                tracker.markBlockUsed(b->getId());
-                                            }
-                                            tracker.reserveVehicle(
-                                                d.getTruck()->getId(),
-                                                d.getTimeSlot(),
-                                                d.getDate()
-                                            );
-                                        }
-                                    }
-                                }
-                                // 3.b) Añadir esos dispatches al plan final
-                                finalDispatches.insert(
-                                    finalDispatches.end(),
-                                    dispatches.begin(),
-                                    dispatches.end()
-                                );
-                            }
+                            tracker.recordDispatchSolution(dispatches);
+                            finalDispatches.insert(
+                                finalDispatches.end(),
+                                dispatches.begin(),
+                                dispatches.end()
+                            );
                         }
                     }
                 }

@@ -45,56 +45,23 @@ vector<TransportUnit*> GlobalExecutionTracker::getAvailableVehicles(const vector
     return result;
 }
 
-void GlobalExecutionTracker::recordSolution(
-    const Chromosome& solution,
-    const vector<Delivery*>& deliveries,
-    const vector<Block*>& blocks,
-    const vector<TransportUnit*>& vehicles,
-    const TimeSlot& slot, 
-    const string& date
-) {
-    const vector<int>& deliveryAssignments = solution.getDeliveryAssignments();
-
-    // Register deliveries and their vehicle usage
-    for (int i = 0; i < deliveries.size(); ++i) {
-        int vehicleIndex = deliveryAssignments[i];
-        if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
-
-        markDeliveryFulfilled(deliveries[i]->getId());
-        reserveVehicle(vehicles[vehicleIndex]->getId(), slot, date);
-        
-        const std::vector<Block*>& bs = deliveries[i]->getBlocksToDeliver();
-        for (Block* b : bs) {
-            markBlockUsed(b->getId());
-        }
-    }
-}
-
-void GlobalExecutionTracker::recordSolutionPattern(
-    const VehiclePattern& pattern,
-    const TimeSlot& slot,
-    const string& date
-) {
-    // 1. Reservar el vehículo
-    int vehicleId = pattern.vehicle->getId();
-    reserveVehicle(vehicleId, slot, date);
-
-    // 2. Marcar entregas y bloques como usados
-    for (const auto& layer : pattern.layers) {
-        // Delivery
-        int deliveryId = layer.delivery->getId();
-        if (!isDeliveryFulfilled(deliveryId)) {
-            markDeliveryFulfilled(deliveryId);
-        }
-        // Bloques de esa entrega
-        for (Block* b : layer.blocks) {
-            int blockId = b->getId();
-            if (!isBlockUsed(blockId)) {
-                markBlockUsed(blockId);
+void GlobalExecutionTracker::recordDispatchSolution(const vector<Dispatch>& dispatches) {
+    for (const auto& d : dispatches) {
+        for (Delivery* dd : d.getDeliveries()) {
+            if (!isDeliveryFulfilled(dd->getId())) {
+                markDeliveryFulfilled(dd->getId());
+                for (Block* b : d.getBlocks()) {
+                    markBlockUsed(b->getId());
+                }
+                reserveVehicle(
+                    d.getTruck()->getId(),
+                    d.getTimeSlot(),
+                    d.getDate()
+                );
             }
         }
     }
-};
+}
 
 vector<int> GlobalExecutionTracker::getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const {
     vector<int> result;

@@ -26,6 +26,8 @@
 #include "chromosome.h"
 #include "vehiclePattern.h"
 
+#include "dispatch.h"
+
 using namespace std;
 
 class GlobalExecutionTracker {
@@ -48,21 +50,9 @@ public:
         const TimeSlot& slot, 
         const string& date
     );
-
-    void recordSolution(
-        const Chromosome& solution,
-        const vector<Delivery*>& deliveries,
-        const vector<Block*>& blocks,
-        const vector<TransportUnit*>& vehicles,
-        const TimeSlot& slot, 
-        const string& date
-    );
     
-    void recordSolutionPattern(
-        const VehiclePattern& pattern,
-        const TimeSlot& slot,
-        const string& date
-    );
+    
+    void recordDispatchSolution(const vector<Dispatch>& dispatches);
     
     vector<int> getUnfulfilledDeliveryIds(const vector<Delivery*>& allDeliveries) const;
 };
