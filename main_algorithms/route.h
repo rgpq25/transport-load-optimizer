@@ -3,6 +3,7 @@
 
 #include "routePoint.h"
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -17,6 +18,8 @@ public:
     int getId() const;
     vector<RoutePoint>& getRoutePoints();
     const vector<RoutePoint>& getRoutePoints() const;
+    
+    string getRouteAsString() const;
     
     vector<Client*> getClients() const;
 };

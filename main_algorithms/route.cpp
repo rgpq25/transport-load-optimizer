@@ -1,5 +1,6 @@
 #include "route.h"
 #include "iostream"
+#include <sstream>
 
 Route::Route() {
 }
@@ -21,6 +22,22 @@ const vector<RoutePoint>& Route::getRoutePoints() const {
     return routePoints;
 }
 
+string Route::getRouteAsString() const {
+    ostringstream oss;
+    
+    for (int i = 0; i < this->routePoints.size(); i++) {
+        auto& rp = this->routePoints[i];
+        
+        oss 
+          << rp.getClient()->getName() 
+          << "(" << rp.getMinutesToClient() << "min)";
+        
+        if (i != this->routePoints.size() - 1) {
+            oss << " -> ";
+        }
+    }
+    return oss.str();
+}
 
 
 vector<Client*> Route::getClients() const {

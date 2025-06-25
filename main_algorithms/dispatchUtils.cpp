@@ -169,26 +169,57 @@ namespace DispatchUtils {
         }
 
         // Header
-        file << "dispatch_id,truck_id,date,slot_start,slot_end,"
-            << "truck_l,truck_w,truck_h,"
-            << "block_id,orientation,x,y,z,lx,ly,lz\n";
+        file << "dispatch_id,date,slot_start,slot_end,"
+            << "route_id,route_string,"
+            << "truck_id,truck_l,truck_w,truck_h,"
+            << "delivery_id,block_id,fragility,orientation,x,y,z,lx,ly,lz\n";
 
         int counter = 1;
         for (int i = 0; i < dispatches.size(); ++i) {
             const Dispatch& d = dispatches[i];
-            int truckId = d.getTruck()->getId();
+            TransportUnit* truck = d.getTruck();
             string date = d.getDate();
             string start = d.getTimeSlot().getStartAsString();
             string end = d.getTimeSlot().getEndAsString();
+            
+            vector<Delivery*> currentDeliveries = d.getDeliveries();
+            
+            unordered_map<int, const BlockPlacement*> blockPlacementsById;
+            blockPlacementsById.reserve(d.getBlockPlacements().size());
+            for (const BlockPlacement& bp : d.getBlockPlacements()) {
+                int id = bp.blockId;
+                blockPlacementsById[id] = &bp;
+            }
+            
+            for (const Delivery* currDelivery : currentDeliveries) {
+                for (const Block* currBlock : currDelivery->getBlocksToDeliver()) {
+                    auto it = blockPlacementsById.find(currBlock->getId());
+                    if (it != blockPlacementsById.end()) {
+                        const BlockPlacement& bp = *it->second;
+                        
+                        file << counter << "," << date << "," << start << "," << end << ","
+                            << d.getRoute()->getId() << "," << d.getRoute()->getRouteAsString() << ","
+                            << truck->getId() << "," << truck->getLength() << "," << truck->getWidth() << "," << truck->getHeight() << ","
+                            << currDelivery->getId() << "," << bp.blockId << "," << currBlock->getFragility() << "," << bp.orientation << ","
+                            << bp.x << "," << bp.y << "," << bp.z << ","
+                            << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
+                        
+                    } else {
+                        cout << "[ERROR] - Couldnt find the block placement of a certain delivery";
+                    }
+                }
+            }
 
+            /*
             for (const auto& bp : d.getBlockPlacements()) {
-                file << counter << "," << truckId << "," << date << ","
-                    << start << "," << end << ","
-                    << d.getTruck()->getLength() << "," << d.getTruck()->getWidth() << "," << d.getTruck()->getHeight() << ","
-                    << bp.blockId << "," << bp.orientation << ","
+                file << counter << "," << date << "," << start << "," << end << ","
+                    << truck->getId() << "," << truck->getLength() << "," << truck->getWidth() << "," << truck->getHeight() << ","
+                    << d. << "," << bp.blockId << "," << bp.orientation << ","
                     << bp.x << "," << bp.y << "," << bp.z << ","
                     << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
             }
+            */
+            
             counter += 1;
         }
 

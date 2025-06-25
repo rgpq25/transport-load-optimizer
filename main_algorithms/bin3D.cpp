@@ -94,7 +94,7 @@ bool Bin3D::hasValidSupport(const array<double, 3>& position, const array<double
         if (fabs(topZ - z) > 1e-6) continue; // not on same support plane
 
         // Check fragility constraint
-        if (fragility > pb.block->getFragility()) return false;  // can't sit on weaker block
+        if (fragility < pb.block->getFragility()) return false;  // can't sit on weaker block
 
         // Compute overlap area in X-Y plane
         double x1 = max(position[0], pb.position[0]);
