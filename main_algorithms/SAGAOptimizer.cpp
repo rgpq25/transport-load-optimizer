@@ -264,9 +264,9 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         }
     }
 
-    double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore / numDeliveriesAssigned;
-    double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
-    double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority / totalPriority;
+    double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore * 100 / numDeliveriesAssigned;
+    double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned * 100 / deliveries.size();
+    double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority * 100 / totalPriority;
     
     return DispatchUtils::getObjectiveFunction(
         dispatchesCount, 

@@ -84,14 +84,14 @@ int main(int argc, char** argv) {
     string inputPath = "../input/input_test_small.txt";
    
     // SAGA Params
-    int populationSize = 100;
+    int populationSize = 70;
     int T_init = 50;
     int T_min = 1;
     double alpha = 0.95;
     
     // GRASP Params
     int graspIterations = 100;
-    double Kpercent = 30;
+    double Kpercent = 20;
     vector<double> alphaSet = {0.1, 0.5};
     
     int unloadingTime = 20;

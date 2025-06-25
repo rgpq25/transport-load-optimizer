@@ -14,11 +14,11 @@ namespace DispatchUtils {
         double priorityCoverage,
         double overcapacityPenalty
     ) {
-        double A = -1.0;      // minimize dispatch count
-        double B = 5.0;         // maximize volume utilization
-        double C = 1.0;         // maximize fulfilling deliveries
-        double D = 1.0;         // maximize priority coverage
-        double E = -100.0;      // penalty factor
+        double A = -5;      // minimize dispatch count
+        double B = 30;         // maximize volume utilization
+        double C = 70;         // maximize fulfilling deliveries
+        double D = 5;         // maximize priority coverage
+        double E = -1000.0;      // penalty factor
 
         return A * dispatchesCount +
             B * avgUtilization + 
@@ -296,9 +296,9 @@ namespace DispatchUtils {
         }
 
         // 4) Retornar getObjectiveFunction
-        double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore / numDeliveriesAssigned;
-        double fulfillmentRatio = allDeliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / allDeliveries.size();
-        double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority / totalPriority;
+        double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore * 100 / numDeliveriesAssigned;
+        double fulfillmentRatio = allDeliveries.empty() ? 0.0 : (double)numDeliveriesAssigned * 100 / allDeliveries.size();
+        double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority * 100 / totalPriority;
         
         return getObjectiveFunction(
             dispatches.size(),
