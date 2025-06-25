@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "delivery.h"
+#include "transportUnit.h"
 
 using namespace std;
 
@@ -23,6 +24,8 @@ public:
     void setFitness(double f);
     
     vector<int> getAssignedBoxOrientations(int vehicleIdx, const vector<Delivery*>& deliveries) const;
+    
+    void printChromosome(const vector<Delivery*> deliveries, const vector<TransportUnit*> transportUnits);
 
 };
 

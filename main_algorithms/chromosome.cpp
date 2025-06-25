@@ -54,3 +54,22 @@ vector<int> Chromosome::getAssignedBoxOrientations(int vehicleIdx, const vector<
 
     return result;
 }
+
+void Chromosome::printChromosome(const vector<Delivery*> deliveries, const vector<TransportUnit*> transportUnits) {
+    cout << "Assignments: ";
+    for (int i=0; i < this->deliveryAssignments.size(); i++) {
+        Delivery* currDelivery = deliveries[i];
+        int utIdx = this->deliveryAssignments[i];
+        
+        cout << currDelivery->getId() << ",";
+        
+        if (utIdx < 0 || utIdx > transportUnits.size() - 1) {
+            cout << "(Null) ";
+            continue;
+        }
+        
+        TransportUnit* currTU = transportUnits[utIdx];
+        cout << "(" << currTU->getId() << ") ||";
+    }
+    cout << endl;
+}
