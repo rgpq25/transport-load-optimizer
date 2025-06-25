@@ -457,7 +457,7 @@ double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& pat
         }
     }
 
-    // 4) Comprobación de factibilidad 3D (igual que en SAGA)
+    // 4) Comprobación de factibilidad 3D
     for (int vIdx : usedVehicles) {
         TransportUnit* vehicle = V[vIdx];
         Bin3D bin(vehicle->getLength(), vehicle->getWidth(), vehicle->getHeight());
