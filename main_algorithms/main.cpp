@@ -80,10 +80,11 @@ int main(int argc, char** argv) {
     auto args = parseArgs(argc, argv);
     bool debug = false;
     
-    string algorithmToRun = args["algo"];
+    string algorithmToRun = "SA-GA";
+    string inputPath = "../input/input_test_small.txt";
    
     // SAGA Params
-    int populationSize = 30;
+    int populationSize = 100;
     int T_init = 50;
     int T_min = 1;
     double alpha = 0.95;
@@ -93,6 +94,13 @@ int main(int argc, char** argv) {
     double Kpercent = 30;
     vector<double> alphaSet = {0.1, 0.5};
     
+    int unloadingTime = 20;
+    int timeSlotInterval = 30;
+    
+    // Parameter configuration with execution arguments
+    /*
+    algorithmToRun = args["algo"];
+    inputPath = args["input"];
     if (algorithmToRun == "SA-GA") {
         if (
             args.count("population") + 
@@ -129,12 +137,10 @@ int main(int argc, char** argv) {
         for (auto a : alphaSet) cout << a << " ";
         cout << endl;
     }
-    
-    int unloadingTime = 20;
-    int timeSlotInterval = 30;
+    */
     
     Input input;
-    input.loadFromFile(args["input"]);
+    input.loadFromFile(inputPath);
     input.printInputData();
         
     cout << endl << "=========MAIN PROGRAM =========" << endl << endl;

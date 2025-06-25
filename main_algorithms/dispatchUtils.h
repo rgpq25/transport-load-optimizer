@@ -14,6 +14,8 @@
 #include "timeSlot.h"
 
 namespace DispatchUtils {
+    double evaluateFitness();
+    
     vector<Dispatch> buildFromChromosome(
         const Chromosome& chromosome,
         const vector<Delivery*>& deliveries,

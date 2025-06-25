@@ -209,8 +209,7 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
 
         for (Block* b : dBlocks) {
             vehicleBlocks[vehicleIndex].push_back(b);
-            double volume = b->getHeight() * b->getWidth() * b->getLength();
-            vehicleVolumeUsed[vehicleIndex] += volume;
+            vehicleVolumeUsed[vehicleIndex] += b->getVolume();
             vehicleWeightUsed[vehicleIndex] += b->getWeight();
         }
 
@@ -242,8 +241,9 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     for (int vIdx : usedVehicles) {
         TransportUnit* vehicle = vehicles[vIdx];
 
-        double maxVolume = vehicle->getHeight() * vehicle->getWidth() * vehicle->getLength();
+        double maxVolume = vehicle->getVolume();
         double maxWeight = vehicle->getMaxWeight();
+        double minWeight = vehicle->getMinWeight();
 
         double usedVolume = vehicleVolumeUsed[vIdx];
         double usedWeight = vehicleWeightUsed[vIdx];
@@ -252,7 +252,9 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         totalUtilizationScore += utilization;
 
         if (usedWeight > maxWeight) {
-            overcapacityPenalty += (usedWeight - maxWeight) * 10.0;  // Penalize overweight
+            overcapacityPenalty += (usedWeight - maxWeight);  // Penalize overweight
+        } else if (usedWeight < minWeight) {
+            overcapacityPenalty += (minWeight - usedWeight);  // Penalize minweight
         }
     }
 
@@ -261,7 +263,6 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
     double priorityCoverage = (totalPriority > 0) ? (double)attendedPriority / totalPriority : 0.0;
 
-    // Simple fitness function (can be tuned)
     double A = 0.5;  // minimize truck count
     double B = 0.5;  // maximize volume utilization
     double C = 1.0;  // penalty factor

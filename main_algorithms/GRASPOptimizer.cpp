@@ -484,7 +484,9 @@ double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& pat
         double util   = usedVol / maxVol;
         totalUtilizationScore += util;
         if (usedW > vehicle->getMaxWeight()) {
-            overcapacityPenalty += (usedW - vehicle->getMaxWeight()) * 10.0;
+            overcapacityPenalty += (usedW - vehicle->getMaxWeight());
+        } else if (usedW < vehicle->getMinWeight()) {
+            overcapacityPenalty += (vehicle->getMinWeight() - usedW);
         }
     }
 

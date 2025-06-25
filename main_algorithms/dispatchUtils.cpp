@@ -7,6 +7,11 @@
 #include <unordered_set>
 
 namespace DispatchUtils {
+    double evaluateFitness() {
+        return 0.0;
+    }
+    
+    
     vector<Dispatch> buildFromChromosome(
         const Chromosome& chromosome,
         const vector<Delivery*>& deliveries,
