@@ -181,7 +181,6 @@ vector<Chromosome> SAGAOptimizer::generateInitialPopulation() {
 
 double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     const vector<int>& deliveryAssignments = chromosome.getDeliveryAssignments();
-    const vector<int>& blockOrientations = chromosome.getBoxOrientations();
 
     // Map vehicle index → blocks assigned to it
     unordered_map<int, vector<Block*>> vehicleBlocks;
@@ -220,7 +219,6 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     }
     
     // 3D Feasibility Check
-    
     int boxIndex = 0;
     for (int vIdx : usedVehicles) {
         TransportUnit* vehicle = vehicles[vIdx];
@@ -231,7 +229,7 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         
         for (size_t i = 0; i < blocksForVehicle.size(); ++i) {
             if (!bin.tryPlaceBlock(blocksForVehicle[i], orientationsForVehicle[i])) {
-                return 0.0;  // Infeasible packing
+                return -9999999;
             }
         }
     }
@@ -257,8 +255,7 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         double usedVolume = vehicleVolumeUsed[vIdx];
         double usedWeight = vehicleWeightUsed[vIdx];
 
-        double utilization = usedVolume / maxVolume;
-        totalUtilizationScore += utilization;
+        totalUtilizationScore += usedVolume / maxVolume;
 
         if (usedWeight > maxWeight) {
             overcapacityPenalty += (usedWeight - maxWeight);  // Penalize overweight
@@ -269,9 +266,15 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
 
     double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore / numDeliveriesAssigned;
     double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
-    double priorityCoverage = (totalPriority > 0) ? (double)attendedPriority / totalPriority : 0.0;
+    double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority / totalPriority;
     
-    return DispatchUtils::getObjectiveFunction(dispatchesCount, avgUtilization, fulfillmentRatio, priorityCoverage, overcapacityPenalty);
+    return DispatchUtils::getObjectiveFunction(
+        dispatchesCount, 
+        avgUtilization, 
+        fulfillmentRatio, 
+        priorityCoverage, 
+        overcapacityPenalty
+    );
 }
 
 
@@ -324,8 +327,8 @@ void SAGAOptimizer::mutate(Chromosome& c) {
     vector<int>& deliveries = c.getDeliveryAssignments();
     vector<int>& orientations = c.getBoxOrientations();
 
-    const double deliveryMutationRate = 0.1;
-    const double orientationMutationRate = 0.1;
+    const double deliveryMutationRate = 0.4;
+    const double orientationMutationRate = 0.4;
 
     // Mutate delivery assignments
     for (size_t i = 0; i < deliveries.size(); ++i) {

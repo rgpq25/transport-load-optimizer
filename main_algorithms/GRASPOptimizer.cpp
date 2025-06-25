@@ -1,11 +1,12 @@
 #include "GRASPOptimizer.h"
+#include "dispatchUtils.h"
+#include "bin3D.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <cstdlib>
 #include <unordered_map>
 #include <unordered_set>
-#include "bin3D.h"
 #include <fstream>
 #include <chrono>
 
@@ -417,98 +418,86 @@ vector<LayerCandidate> GRASPOptimizer::removeKPercent(VehiclePattern& pattern) {
 }
 
 double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& patterns) const {
-    // 1) Acumular prioridad total
-    int totalPriority = 0;
-    for (Delivery* d : LP) {
-        totalPriority += d->getPriority();
-    }
-
-    // 2) Mapear vehículo → bloques, volúmenes y pesos usados
     unordered_map<int, vector<Block*>> vehicleBlocks;
     unordered_map<int, double> vehicleVolumeUsed;
     unordered_map<int, double> vehicleWeightUsed;
     unordered_set<int> usedVehicles;
 
-    // 3) Contar deliveries atendidos (únicos) y prioridad cubierta
     unordered_set<int> seenDeliveries;
+    
     int numDeliveriesAssigned = 0;
+    int totalPriority = 0;
     int attendedPriority    = 0;
+    
+    // 1) Acumular prioridad total
+    for (Delivery* d : LP) {
+        totalPriority += d->getPriority();
+    }
 
     for (const auto& pat : patterns) {
-        // Encontrar índice del vehículo en V
         int vIdx = int(find(V.begin(), V.end(), pat.vehicle) - V.begin());
         usedVehicles.insert(vIdx);
+        
+        TransportUnit* vehicle = V[vIdx];
+        Bin3D bin(vehicle->getLength(), vehicle->getWidth(), vehicle->getHeight());
 
         for (const auto& layer : pat.layers) {
             Delivery* d = layer.delivery;
             int did = d->getId();
+            
             // Sólo contar cada delivery una vez
             if (seenDeliveries.insert(did).second) {
                 numDeliveriesAssigned++;
                 attendedPriority += d->getPriority();
             }
-            // Registrar bloques, volumen y peso
-            for (Block* b : layer.blocks) {
+            
+            // Registrar bloques, volumen y peso ( verificar si es viable en 3D
+            for (size_t i = 0; i < layer.blocks.size(); ++i) {
+                Block* b = layer.blocks[i];
+                
                 vehicleBlocks[vIdx].push_back(b);
-                double vol = b->getHeight() * b->getWidth() * b->getLength();
-                vehicleVolumeUsed[vIdx] += vol;
+                vehicleVolumeUsed[vIdx] += b->getVolume();
                 vehicleWeightUsed[vIdx] += b->getWeight();
-            }
-        }
-    }
-
-    // 4) Comprobación de factibilidad 3D
-    for (int vIdx : usedVehicles) {
-        TransportUnit* vehicle = V[vIdx];
-        Bin3D bin(vehicle->getLength(), vehicle->getWidth(), vehicle->getHeight());
-        // Asumimos que las orientaciones usadas están guardadas en pat.layers
-        for (Block* b : vehicleBlocks[vIdx]) {
-            // Aquí deberías recuperar la orientación correspondiente;
-            // si no la almacenas, asume una orientación fija o extiéndelo.
-            int ori = 0;  
-            if (!bin.tryPlaceBlock(b, ori)) {
-                return 0.0;  // Empaque inviable
+                
+                if (!bin.tryPlaceBlock(b, layer.orientations[i])) {
+                    return -9999999;
+                }
             }
         }
     }
 
     // 5) Calcular score y penalizaciones
     double totalUtilizationScore = 0.0;
-    double overcapacityPenalty   = 0.0;
+    double overcapacityPenalty = 0.0;
 
     for (int vIdx : usedVehicles) {
         TransportUnit* vehicle = V[vIdx];
-        double maxVol = vehicle->getLength() * vehicle->getWidth() * vehicle->getHeight();
-        double usedVol = vehicleVolumeUsed[vIdx];
-        double usedW   = vehicleWeightUsed[vIdx];
-        double util   = usedVol / maxVol;
-        totalUtilizationScore += util;
-        if (usedW > vehicle->getMaxWeight()) {
-            overcapacityPenalty += (usedW - vehicle->getMaxWeight());
-        } else if (usedW < vehicle->getMinWeight()) {
-            overcapacityPenalty += (vehicle->getMinWeight() - usedW);
+        
+        double maxVolume = vehicle->getVolume();
+        double maxWeight = vehicle->getMaxWeight();
+        double minWeight = vehicle->getMinWeight();
+
+        double usedVolume = vehicleVolumeUsed[vIdx];
+        double usedWeight = vehicleWeightUsed[vIdx];
+
+        totalUtilizationScore += usedVolume / maxVolume;
+
+        if (usedWeight > maxWeight) {
+            overcapacityPenalty += (usedWeight - maxWeight);  // Penalize overweight
+        } else if (usedWeight < minWeight) {
+            overcapacityPenalty += (minWeight - usedWeight);  // Penalize minweight
         }
     }
 
-    int numVehiclesUsed = (int)usedVehicles.size();
-    double avgUtilization   = numVehiclesUsed ? totalUtilizationScore / numVehiclesUsed : 0.0;
+    double avgUtilization   = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore / numDeliveriesAssigned;
     double fulfillmentRatio = LP.empty() ? 0.0 : (double)numDeliveriesAssigned / LP.size();
-    double priorityCoverage = totalPriority ? (double)attendedPriority / totalPriority : 0.0;
+    double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority / totalPriority;
 
-    // 6) Combinar según los mismos pesos A…E de SAGA
-    const double A = 0.5; // penaliza nº camiones
-    const double B = 0.5; // recompensa utilización
-    const double C = 1.0; // penaliza sobrepeso
-    const double D = 1.0; // recompensa ratio de entregas
-    const double E = 1.0; // recompensa coverage de prioridad
-
-    double truckScore = V.empty() ? 0.0 : 1.0 - double(numVehiclesUsed) / V.size();
-    double fitness =
-        A * truckScore +
-        B * avgUtilization -
-        C * overcapacityPenalty +
-        D * fulfillmentRatio +
-        E * priorityCoverage;
-
-    return fitness;
+    return DispatchUtils::getObjectiveFunction(
+        patterns.size(), 
+        avgUtilization, 
+        fulfillmentRatio, 
+        priorityCoverage, 
+        overcapacityPenalty
+    );
 }
