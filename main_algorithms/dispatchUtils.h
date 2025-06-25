@@ -14,7 +14,13 @@
 #include "timeSlot.h"
 
 namespace DispatchUtils {
-    double evaluateFitness();
+    double getObjectiveFunction(
+        double dispatchesCount,
+        double avgUtilization,
+        double fulfillmentRatio,
+        double priorityCoverage,
+        double overcapacityPenalty
+    );
     
     vector<Dispatch> buildFromChromosome(
         const Chromosome& chromosome,

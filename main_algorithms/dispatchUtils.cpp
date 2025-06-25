@@ -1,16 +1,31 @@
 #include "dispatchUtils.h"
-#include <map>
 #include "bin3D.h"
+#include <map>
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 
 namespace DispatchUtils {
-    double evaluateFitness() {
-        return 0.0;
-    }
-    
+    double getObjectiveFunction(
+        double dispatchesCount,
+        double avgUtilization,
+        double fulfillmentRatio,
+        double priorityCoverage,
+        double overcapacityPenalty
+    ) {
+        double A = -1.0;      // minimize dispatch count
+        double B = 5.0;         // maximize volume utilization
+        double C = 1.0;         // maximize fulfilling deliveries
+        double D = 1.0;         // maximize priority coverage
+        double E = -100.0;      // penalty factor
+
+        return A * dispatchesCount +
+            B * avgUtilization + 
+            C * fulfillmentRatio +
+            D * priorityCoverage +
+            E * overcapacityPenalty;
+    };
     
     vector<Dispatch> buildFromChromosome(
         const Chromosome& chromosome,
@@ -57,7 +72,7 @@ namespace DispatchUtils {
                 }
             }
 
-            if (!feasible) continue;  // Safety guard
+            if (!feasible) continue;
 
             // Retrieve and convert placed blocks
             const vector<PlacedBox>& placed = bin.getPlacedBoxes();
@@ -73,7 +88,6 @@ namespace DispatchUtils {
                 bp.lz = pb.size[2];
                 placements.push_back(bp);
             }
-            
             
             Dispatch dispatch(
                 truck,

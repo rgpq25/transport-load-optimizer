@@ -1,5 +1,6 @@
 #include "SAGAOptimizer.h"
 #include "bin3D.h"
+#include "dispatchUtils.h"
 #include <cstdlib>
 #include <ctime>
 #include <unordered_map>
@@ -187,9 +188,9 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     unordered_map<int, double> vehicleVolumeUsed;
     unordered_map<int, double> vehicleWeightUsed;
     unordered_set<int> usedVehicles;
+    unordered_map<int, int> transportUsageById;
     
     int numDeliveriesAssigned = 0;
-    
     int totalPriority = 0;
     int attendedPriority = 0;
 
@@ -200,6 +201,8 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         
         int vehicleIndex = deliveryAssignments[i];
         if (vehicleIndex < 0 || vehicleIndex >= vehicles.size()) continue;
+        
+        transportUsageById[vehicleIndex] += 1;
         
         attendedPriority += priority;
         numDeliveriesAssigned++;
@@ -232,11 +235,17 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
             }
         }
     }
-    
 
     // Evaluate fitness
+    int dispatchesCount = 0;
     double totalUtilizationScore = 0.0;
     double overcapacityPenalty = 0.0;
+    
+    for (auto it = transportUsageById.begin(); it != transportUsageById.end(); ++it) {
+        int key   = it->first;
+        int value = it->second;
+        dispatchesCount += 1;
+    }
 
     for (int vIdx : usedVehicles) {
         TransportUnit* vehicle = vehicles[vIdx];
@@ -258,26 +267,11 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         }
     }
 
-    int numVehiclesUsed = usedVehicles.size();
-    double avgUtilization = usedVehicles.empty() ? 0.0 : totalUtilizationScore / numVehiclesUsed;
+    double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore / numDeliveriesAssigned;
     double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned / deliveries.size();
     double priorityCoverage = (totalPriority > 0) ? (double)attendedPriority / totalPriority : 0.0;
-
-    double A = 0.5;  // minimize truck count
-    double B = 0.5;  // maximize volume utilization
-    double C = 1.0;  // penalty factor
-    double D = 1.0;  // reward for fulfilling deliveries
-    double E = 1.0;  // reward priority coverage
     
-    double truckScore = (vehicles.empty()) ? 0.0 : (1.0 - (double(numVehiclesUsed) / vehicles.size()));
-
-    double fitness = A * truckScore +
-                     B * avgUtilization -
-                     C * overcapacityPenalty +
-                     D * fulfillmentRatio +
-                     E * priorityCoverage;
-
-    return fitness;
+    return DispatchUtils::getObjectiveFunction(dispatchesCount, avgUtilization, fulfillmentRatio, priorityCoverage, overcapacityPenalty);
 }
 
 
