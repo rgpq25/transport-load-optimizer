@@ -82,7 +82,11 @@ int main(int argc, char** argv) {
     bool debug = false;
     
     string algorithmToRun = "SA-GA";
-    string inputPath = "../input/input_test_small.txt";
+    
+    string repositoryPath = "C:/main/university/semesters/CICLO XII/TESIS2/transport-load-optimizer";
+    string inputPath = repositoryPath + "/input/input_test_small.txt";
+    string outputDispatchesPath = repositoryPath + "/output/output_dispatches.csv";
+    string outputMetadataPath = repositoryPath + "/output/output_result_metadata.csv";
    
     // SAGA Params
     int populationSize = 70;
@@ -126,17 +130,6 @@ int main(int argc, char** argv) {
         alphaSet = parseAlphaSet(args["alphas"]);
     } else {
         throw runtime_error("Missing --algo parameter.");
-    }
-    
-    // DEBUG: Mostrar parámetros leídos
-    cout << "Algoritmo: " << algorithmToRun << endl;
-    if (algorithmToRun == "SA-GA") {
-        cout << "T_init: " << T_init << ", T_min: " << T_min << ", alpha: " << alpha
-             << ", población: " << populationSize << endl;
-    } else if (algorithmToRun == "GRASP") {
-        cout << "Iteraciones: " << graspIterations << ", K%: " << Kpercent << ", alphas: ";
-        for (auto a : alphaSet) cout << a << " ";
-        cout << endl;
     }
     //*/
     
@@ -350,13 +343,13 @@ int main(int argc, char** argv) {
     
     DispatchUtils::exportDispatchesToCSV(
         finalDispatches, 
-        "../output/output_dispatches.csv"
+        outputDispatchesPath
     );
     
     DispatchUtils::exportResultMetadata(
         solutionFitness,
         algorithmTotalDuration.count(),
-        "../output/output_result_metadata.csv"
+        outputMetadataPath
     );
     
     
