@@ -183,8 +183,8 @@ namespace DispatchUtils {
     void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename) {
         ofstream file(filename);
         if (!file.is_open()) {
-            cerr << "Error opening output CSV file." << endl;
-            return;
+            cout << "Error opening output CSV file " << filename << endl;
+            throw runtime_error("[ERROR] - Error opening output CSV file");
         }
 
         // Header
@@ -240,15 +240,15 @@ namespace DispatchUtils {
     void exportResultMetadata(double fitness, double duration, const string& filename) {
         ofstream file(filename);
         if (!file.is_open()) {
-            cerr << "Error opening output CSV file." << endl;
-            return;
+            cout << "Error opening output CSV file " << filename << endl;
+            throw runtime_error("[ERROR] - Error opening output CSV file");
         }
 
         file << "fitness,duration\n";
         file << fitness << "," << duration << "\n";
 
         file.close();
-        cout << "[CSV] - Exported fitness and duration to " << filename << endl;
+        cout << "[CSV] - Exported fitness (" << fitness << ") and duration (" << duration << ") to " << filename << endl;
     }
     
     
