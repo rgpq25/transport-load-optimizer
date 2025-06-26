@@ -88,12 +88,12 @@ saga_args = [
     {
         "nombreParametro": "Población",
         "nombreVariable": "population",
-        "defaultValue": "50",
+        "defaultValue": "70",
     },
     {
         "nombreParametro": "Temperatura inicial",
         "nombreVariable": "t_init",
-        "defaultValue": "1000",
+        "defaultValue": "50",
     },
     {
         "nombreParametro": "Temperatura mínima",
@@ -114,9 +114,9 @@ grasp_arg = [
         "defaultValue": "100",
     },
     {
-        "nombreParametro": "% de pallets por remover (K%)",
+        "nombreParametro": "% de bloques por remover (K%)",
         "nombreVariable": "k_percent",
-        "defaultValue": "30",
+        "defaultValue": "20",
     },
     {
         "nombreParametro": "Alfas (coma separados)",

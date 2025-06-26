@@ -41,6 +41,7 @@ namespace DispatchUtils {
     );
     
     void exportDispatchesToCSV(const vector<Dispatch>& dispatches, const string& filename);
+    void exportResultMetadata(double fitness, double duration, const string& filename);
     
     double evaluateDispatchesFitness(
         const vector<Dispatch>& dispatches,

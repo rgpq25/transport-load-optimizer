@@ -213,6 +213,7 @@ namespace DispatchUtils {
             for (const Delivery* currDelivery : currentDeliveries) {
                 for (const Block* currBlock : currDelivery->getBlocksToDeliver()) {
                     auto it = blockPlacementsById.find(currBlock->getId());
+                    
                     if (it != blockPlacementsById.end()) {
                         const BlockPlacement& bp = *it->second;
                         
@@ -223,28 +224,37 @@ namespace DispatchUtils {
                             << bp.x << "," << bp.y << "," << bp.z << ","
                             << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
                         
-                    } else {
-                        cout << "[ERROR] - Couldnt find the block placement of a certain delivery";
-                    }
+                    } else throw runtime_error("[ERROR] - Couldnt find the block placement of a certain delivery");
                 }
             }
-
-            /*
-            for (const auto& bp : d.getBlockPlacements()) {
-                file << counter << "," << date << "," << start << "," << end << ","
-                    << truck->getId() << "," << truck->getLength() << "," << truck->getWidth() << "," << truck->getHeight() << ","
-                    << d. << "," << bp.blockId << "," << bp.orientation << ","
-                    << bp.x << "," << bp.y << "," << bp.z << ","
-                    << bp.lx << "," << bp.ly << "," << bp.lz << "\n";
-            }
-            */
             
             counter += 1;
         }
 
         file.close();
-        cout << "[CSV] Exported " << dispatches.size() << " dispatches to " << filename << endl;
+        cout << "[CSV] - Exported " << dispatches.size() << " dispatches to " << filename << endl;
     }
+    
+    
+    
+    void exportResultMetadata(double fitness, double duration, const string& filename) {
+        ofstream file(filename);
+        if (!file.is_open()) {
+            cerr << "Error opening output CSV file." << endl;
+            return;
+        }
+
+        file << "fitness,duration\n";
+        file << fitness << "," << duration << "\n";
+
+        file.close();
+        cout << "[CSV] - Exported fitness and duration to " << filename << endl;
+    }
+    
+    
+    
+    
+    
 
     double evaluateDispatchesFitness(
         const vector<Dispatch>& dispatches,

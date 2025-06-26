@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <chrono>
 
 #include "block.h"
 #include "transportUnit.h"
@@ -98,7 +99,7 @@ int main(int argc, char** argv) {
     int timeSlotInterval = 30;
     
     // Parameter configuration with execution arguments
-    /*
+    ///*
     algorithmToRun = args["algo"];
     inputPath = args["input"];
     if (algorithmToRun == "SA-GA") {
@@ -137,7 +138,7 @@ int main(int argc, char** argv) {
         for (auto a : alphaSet) cout << a << " ";
         cout << endl;
     }
-    */
+    //*/
     
     Input input;
     input.loadFromFile(inputPath);
@@ -155,6 +156,7 @@ int main(int argc, char** argv) {
     }
     
     // Filter 1: By date
+    auto start = chrono::high_resolution_clock::now();
     for(const string& dueDate : uniqueDueDates) {
         printLog("DUE DATE = " + dueDate, debug);
         
@@ -322,6 +324,8 @@ int main(int argc, char** argv) {
             }
         }
     }
+    auto end = chrono::high_resolution_clock::now();  // Fin de medición de tiempo
+    chrono::duration<double> algorithmTotalDuration = end - start;
     
     
     cout << endl << "=========== FINAL DISPATCH PLAN (" 
@@ -341,11 +345,18 @@ int main(int argc, char** argv) {
     }
     
     cout << endl << "======== FITNESS OF SOLUTION ==========" << endl;
-    cout << DispatchUtils::evaluateDispatchesFitness(finalDispatches, deliveries, allVehicles) << endl;
+    double solutionFitness = DispatchUtils::evaluateDispatchesFitness(finalDispatches, deliveries, allVehicles);
+    cout << solutionFitness << endl;
     
     DispatchUtils::exportDispatchesToCSV(
         finalDispatches, 
         "../output/output_dispatches.csv"
+    );
+    
+    DispatchUtils::exportResultMetadata(
+        solutionFitness,
+        algorithmTotalDuration.count(),
+        "../output/output_result_metadata.csv"
     );
     
     
