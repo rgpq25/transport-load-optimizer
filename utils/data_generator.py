@@ -11,17 +11,20 @@ MAX_DELIVERIES_PER_ORDER = 3
 MAX_BLOCKS_PER_DELIVERY = 5
 NUM_ROUTES = 6
 TODAY = datetime(2024, 9, 21)
+END_DATE = datetime(2024, 9, 21)
+OUTPUT_FILE = "C:/main/university/semesters/CICLO XII/TESIS2/transport-load-optimizer/input/input_sameBlocks.txt"
 
 def generate_random_date(start_date, end_date):
     delta = end_date - start_date
+
+    if delta.days == 0:
+        return start_date.strftime("%Y-%m-%d")
+
     random_days = random.randint(0, delta.days)
     return (start_date + timedelta(days=random_days)).strftime("%Y-%m-%d")
 
-
-
 def generate_clients():
     return [(i + 1, f"Client {i + 1}") for i in range(NUM_CLIENTS)]
-
 
 def generate_blocks():
     blocks = []
@@ -34,7 +37,6 @@ def generate_blocks():
         blocks.append((i, h, w, l, weight, fragility))
     return blocks
 
-
 def generate_vehicles():
     vehicles = []
     for i in range(1, NUM_VEHICLES + 1):
@@ -44,7 +46,6 @@ def generate_vehicles():
         maxW = random.randint(1800, 4000)
         vehicles.append((i, h, w, l, maxW, 0))
     return vehicles
-
 
 def generate_routes(clients, orders):
     routes = []
@@ -77,8 +78,6 @@ def generate_routes(clients, orders):
 
     return routes
 
-
-
 def generate_orders(clients, available_blocks):
     orders = []
     used_blocks = set()
@@ -94,8 +93,8 @@ def generate_orders(clients, available_blocks):
         for _ in range(num_deliveries):
             shift = random.choice(["morning", "afternoon", "null"])
 
-            start = datetime(2024, 9, 21)
-            end = datetime(2024, 10, 5)
+            start = TODAY
+            end = END_DATE
             due_date = generate_random_date(start, end)
 
             num_blocks = random.randint(1, MAX_BLOCKS_PER_DELIVERY)
@@ -156,4 +155,4 @@ orders = generate_orders(clients, available_block_ids)
 routes = generate_routes(clients, orders)  # Ahora depende de los pedidos
 
 # SAVE
-save_dataset(clients, blocks, vehicles, routes, orders, "../input/input_large.txt")
+save_dataset(clients, blocks, vehicles, routes, orders, OUTPUT_FILE)
