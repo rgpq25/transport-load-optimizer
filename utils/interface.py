@@ -4,16 +4,17 @@ import subprocess
 import pandas as pd
 import plotly.graph_objects as go
 import random
+import os
+from config import repository_path
 
 def visualize_dispatch(dispatch):
-    # Get truck dimensions from the first row
     truck_l = dispatch["truck_l"]
     truck_w = dispatch["truck_w"]
     truck_h = dispatch["truck_h"]
 
     fig = go.Figure()
 
-    # Draw container (transparent bounding box)
+    # Draw container
     fig.add_trace(go.Mesh3d(
         x=[0, truck_l, truck_l, 0, 0, truck_l, truck_l, 0],
         y=[0, 0, truck_w, truck_w, 0, 0, truck_w, truck_w],
@@ -193,7 +194,7 @@ class App:
             messagebox.showwarning("Faltan datos", "Complete todos los campos antes de ejecutar el algoritmo.")
             return
 
-        exec_path = "../main_algorithms/dist/Debug/MinGW-Windows/main_algorithms.exe"
+        exec_path = os.path.join(repository_path, "main_algorithms/dist/Debug/MinGW-Windows/main_algorithms.exe")
         params = {label: entry.get() for label, entry in self.param_entries.items()}
         args = [exec_path, "--input", data, "--algo", algo]
         for k, v in params.items():
@@ -214,6 +215,7 @@ class App:
                 "algo": algo,
                 **params
             }
+            self.last_input_path = data
 
             self.show_result_screen()
         except subprocess.CalledProcessError as e:
@@ -236,11 +238,13 @@ class App:
         btn_volver.place(relx=1.0, x=-10, y=10, anchor="ne")
 
         try:
-            df = pd.read_csv("../output/output_dispatches.csv")
+            df = pd.read_csv(os.path.join(repository_path, "output/output_dispatches.csv"))
+            metadata_df = pd.read_csv(os.path.join(repository_path, "output/output_result_metadata.csv"))
+            metadata = metadata_df.to_dict(orient="records")[0]
+
             grouped = df.groupby("dispatch_id")
             self.dispatches = []
             for dispatch_id, group in grouped:
-                print(f"Procesando despacho {dispatch_id} con {len(group)} entregas")
                 first = group.iloc[0]
                 blocks = group[["block_id", "delivery_id", "x", "y", "z", "lx", "ly", "lz", "fragility"]].to_dict(orient="records")
 
@@ -261,13 +265,33 @@ class App:
 
             tk.Label(self.result_frame, text="Configuración", font=("Arial", 12, "bold")).pack(anchor="w", padx=10, pady=(10, 0))
             if hasattr(self, 'last_execution_params'):
+                algo = self.last_execution_params.get("algo", "Desconocido")
+                if algo == "SA-GA":
+                    current_args = saga_args
+                elif algo == "GRASP":
+                    current_args = grasp_arg
+                else:
+                    raise ValueError("Algoritmo desconocido")
+                
                 for k, v in self.last_execution_params.items():
-                    tk.Label(self.result_frame, text=f"{k}: {v}", anchor="w").pack(anchor="w", padx=20)
+                    paramLabel = None
+
+                    if k != "algo":
+                        for param in current_args:
+                            if param["nombreVariable"] == k:
+                                paramLabel = param["nombreParametro"]
+                                break
+                        if paramLabel == None:
+                            paramLabel == "[ERROR]"
+                    else:
+                        paramLabel = "Algoritmo"
+
+                    tk.Label(self.result_frame, text=f"{paramLabel}: {v}", anchor="w").pack(anchor="w", padx=20)
 
             tk.Label(self.result_frame, text="Resultado", font=("Arial", 12, "bold")).pack(anchor="w", padx=10, pady=(10, 0))
-            tk.Label(self.result_frame, text="El algoritmo ejecutado obtuvo una solución con fitness estimado (a insertar)", anchor="w").pack(anchor="w", padx=10)
+            tk.Label(self.result_frame, text=f"El algoritmo ejecutado obtuvo una solución con fitness {metadata.get('fitness', '[ERROR]')}, y demoró {metadata.get('duration', '[ERROR]')} segundos", anchor="w").pack(anchor="w", padx=10)
 
-            tk.Label(self.result_frame, text="Entregas", font=("Arial", 12, "bold")).pack(anchor="w", padx=10, pady=(10, 0))
+            tk.Label(self.result_frame, text="Despachos", font=("Arial", 12, "bold")).pack(anchor="w", padx=10, pady=(10, 0))
 
             # Canvas con scrollbar
             scroll_canvas = tk.Canvas(self.result_frame, height=400)
@@ -292,16 +316,16 @@ class App:
                 scroll_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
             scroll_canvas.bind_all("<MouseWheel>", on_mousewheel)
 
-            # Agregar entregas al scroll_frame
+            # Agregar despachos al scroll_frame
             for d in self.dispatches:
-                frame = tk.LabelFrame(scroll_frame, text=f"Entrega #{d['dispatch_id']}", padx=5, pady=5)
+                frame = tk.LabelFrame(scroll_frame, text=f"Despacho #{d['dispatch_id']}", padx=5, pady=5)
                 frame.pack(fill="x", expand=True, padx=10, pady=8)
 
-                # Contenedor principal para columnas
+                # Contenedor principal
                 content = tk.Frame(frame)
                 content.pack(fill="x", expand=True, pady=(5, 0))
 
-                # Botón 'Ver bloques' alineado arriba a la derecha del frame de la entrega
+                # Botón 'Ver bloques'
                 btn_bloques = tk.Button(
                     frame,
                     text="Ver bloques",
@@ -310,7 +334,7 @@ class App:
                 )
                 btn_bloques.place(relx=1.0, x=-10, y=0, anchor="ne")
 
-                # Usar grid para asegurar misma altura y ancho proporcional
+                # Grid
                 content.columnconfigure(0, weight=1, uniform="col")
                 content.columnconfigure(1, weight=1, uniform="col")
 
@@ -351,6 +375,26 @@ class App:
 
     def show_main_screen(self):
         self.setup_ui()
+
+        # Restaurar el archivo de entrada
+        if hasattr(self, "last_input_path"):
+            self.data_entry.delete(0, tk.END)
+            self.data_entry.insert(0, self.last_input_path)
+
+        # Restaurar el algoritmo
+        if hasattr(self, "last_execution_params"):
+            algo = self.last_execution_params.get("algo", "")
+            if algo:
+                self.algo_combo.set(algo)
+                self.update_params()
+
+                # Restaurar los valores de los parámetros
+                for param_key, value in self.last_execution_params.items():
+                    if param_key == "algo":
+                        continue
+                    if param_key in self.param_entries:
+                        self.param_entries[param_key].delete(0, tk.END)
+                        self.param_entries[param_key].insert(0, value)
 
 if __name__ == "__main__":
     root = tk.Tk()
