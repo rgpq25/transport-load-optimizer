@@ -47,6 +47,10 @@ void Delivery::setParentOrder(Order* parentOrder) {
     this->parentOrder = parentOrder;
 }
 
+Order* Delivery::getParentOrder() {
+    return this->parentOrder;
+}
+
 
 
 

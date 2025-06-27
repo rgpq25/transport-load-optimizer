@@ -29,6 +29,7 @@ public:
     const vector<Block*>& getBlocksToDeliver() const;
     
     void setParentOrder(Order* order);
+    Order* getParentOrder();
     
     int getPriority() const;
     Client* getClient() const;
