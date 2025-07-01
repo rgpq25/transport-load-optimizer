@@ -17,20 +17,22 @@ SAGAOptimizer::SAGAOptimizer(
     vector<TransportUnit*>& vehicles,
     Route* route,
     TimeSlot timeSlot,
+    int populationSize,
+    double mutationRate,
     int T_init,
     int T_min,
-    double alpha,
-    int populationSize
+    double alpha
 ) {
     this->deliveries = deliveries;
     this->blocks = blocks;
     this->vehicles = vehicles;
     this->route = route;
     this->timeSlot = timeSlot;
+    this->populationSize = populationSize;
+    this->mutationRate = mutationRate;
     this->T_init = T_init;
     this->T_min = T_min;
     this->alpha = alpha;
-    this->populationSize = populationSize;
 }
 
 
@@ -327,12 +329,9 @@ void SAGAOptimizer::mutate(Chromosome& c) {
     vector<int>& deliveries = c.getDeliveryAssignments();
     vector<int>& orientations = c.getBoxOrientations();
 
-    const double deliveryMutationRate = 0.4;
-    const double orientationMutationRate = 0.4;
-
     // Mutate delivery assignments
     for (size_t i = 0; i < deliveries.size(); ++i) {
-        if ((rand() / double(RAND_MAX)) < deliveryMutationRate) {
+        if ((rand() / double(RAND_MAX)) < this->mutationRate) {
             int newVehicle = (rand() % (vehicles.size() + 1)) - 1;
             deliveries[i] = newVehicle;
         }
@@ -340,7 +339,7 @@ void SAGAOptimizer::mutate(Chromosome& c) {
 
     // Mutate block orientations
     for (size_t i = 0; i < orientations.size(); ++i) {
-        if ((rand() / double(RAND_MAX)) < orientationMutationRate) {
+        if ((rand() / double(RAND_MAX)) < this->mutationRate) {
             orientations[i] = 1 - orientations[i]; // Flip 0 ↔ 1
         }
     }

@@ -90,6 +90,7 @@ int main(int argc, char** argv) {
    
     // SAGA Params
     int populationSize = 70;
+    double mutationRate = 0.1;
     int T_init = 50;
     int T_min = 1;
     double alpha = 0.95;
@@ -103,21 +104,30 @@ int main(int argc, char** argv) {
     int timeSlotInterval = 30;
     
     // Parameter configuration with execution arguments
-    ///*
+    
     algorithmToRun = args["algo"];
     inputPath = args["input"];
     if (algorithmToRun == "SA-GA") {
         if (
-            args.count("population") + 
+            args.count("population") +
+            args.count("mutation_rate") +
             args.count("t_init") + 
             args.count("t_min") + 
-            args.count("alpha") != 4
+            args.count("alpha") != 5
         ) throw runtime_error("Missing parameters for SA-GA algorithm.");
         
         populationSize = stoi(args["population"]);
+        mutationRate = stod(args["mutation_rate"]);
         T_init = stoi(args["t_init"]);
         T_min= stoi(args["t_min"]);
         alpha = stod(args["alpha"]);
+        
+        cout << "[INIT] - Params set for SA-GA: " << 
+                "populationSize = " << populationSize << " | " <<
+                "mutationRate = " << mutationRate << " | " <<
+                "T_init = " << T_init << " | " <<
+                "T_min = " << T_min << " | " <<
+                "alpha = " << alpha << endl;
     } else if (algorithmToRun == "GRASP") {
         if (
             args.count("iterations") + 
@@ -128,10 +138,14 @@ int main(int argc, char** argv) {
         graspIterations = stoi(args["iterations"]);
         Kpercent = stod(args["k_percent"]);
         alphaSet = parseAlphaSet(args["alphas"]);
+        
+        cout << "[INIT] - Params set for GRASP: " << 
+                "graspIterations = " << graspIterations << " | " <<
+                "Kpercent = " << Kpercent << " | " <<
+                "alphaSet = " << args["alphas"] << endl;
     } else {
         throw runtime_error("Missing --algo parameter.");
     }
-    //*/
     
     Input input;
     input.loadFromFile(inputPath);
@@ -260,10 +274,11 @@ int main(int argc, char** argv) {
                             availableVehicles,
                             const_cast<Route*>(&route),
                             ts,
+                            populationSize,
+                            mutationRate,
                             T_init, 
                             T_min, 
-                            alpha, 
-                            populationSize
+                            alpha
                         );
 
                         Chromosome best = optimizer.run(matchesSelected);
@@ -276,7 +291,6 @@ int main(int argc, char** argv) {
                             ts, 
                             dueDate
                         );
-                        
                         tracker.recordDispatchSolution(dispatches);
                         finalDispatches.insert(finalDispatches.end(), dispatches.begin(), dispatches.end());
                     } 

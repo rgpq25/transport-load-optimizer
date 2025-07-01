@@ -33,10 +33,11 @@ private:
     Route* route;
     TimeSlot timeSlot;
 
+    int populationSize;
+    double mutationRate;
     int T_init;
     int T_min;
     double alpha;
-    int populationSize;
 
 public:
     SAGAOptimizer(
@@ -45,10 +46,11 @@ public:
         vector<TransportUnit*>& vehicles,
         Route* route,
         TimeSlot timeSlot,
+        int populationSize,
+        double mutationRate,
         int T_init,
         int T_min,
-        double alpha,
-        int populationSize
+        double alpha        
     );
 
     Chromosome run(bool printDebug); // runs the SA-GA loop and returns the best solution
