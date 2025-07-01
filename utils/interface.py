@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import random
 import os
-from config import repository_path
+from config import saga_args, grasp_args, algorithm_executable_path, output_dispatches_path, output_metadata_path
 
 def visualize_dispatch(dispatch):
     truck_l = dispatch["truck_l"]
@@ -85,47 +85,6 @@ def visualize_dispatch(dispatch):
     fig.show()
 
 
-saga_args = [
-    {
-        "nombreParametro": "Población",
-        "nombreVariable": "population",
-        "defaultValue": "70",
-    },
-    {
-        "nombreParametro": "Temperatura inicial",
-        "nombreVariable": "t_init",
-        "defaultValue": "50",
-    },
-    {
-        "nombreParametro": "Temperatura mínima",
-        "nombreVariable": "t_min",
-        "defaultValue": "1",
-    },
-    {
-        "nombreParametro": "Factor enfriamiento",
-        "nombreVariable": "alpha",
-        "defaultValue": "0.95",
-    },
-]
-
-grasp_arg = [
-    {
-        "nombreParametro": "Numero de iteraciones",
-        "nombreVariable": "iterations",
-        "defaultValue": "100",
-    },
-    {
-        "nombreParametro": "% de bloques por remover (K%)",
-        "nombreVariable": "k_percent",
-        "defaultValue": "20",
-    },
-    {
-        "nombreParametro": "Alfas (coma separados)",
-        "nombreVariable": "alphas",
-        "defaultValue": "0.1,0.5",
-    },
-]
-
 class App:
     def __init__(self, root):
         self.root = root
@@ -168,7 +127,7 @@ class App:
         self.param_entries = {}
         algo = self.algo_combo.get()
 
-        args_config = saga_args if algo == "SA-GA" else grasp_arg
+        args_config = saga_args if algo == "SA-GA" else grasp_args
 
         for i, param in enumerate(args_config):
             label = param["nombreParametro"]
@@ -194,9 +153,8 @@ class App:
             messagebox.showwarning("Faltan datos", "Complete todos los campos antes de ejecutar el algoritmo.")
             return
 
-        exec_path = os.path.join(repository_path, "main_algorithms/dist/Debug/MinGW-Windows/main_algorithms.exe")
         params = {label: entry.get() for label, entry in self.param_entries.items()}
-        args = [exec_path, "--input", data, "--algo", algo]
+        args = [algorithm_executable_path, "--input", data, "--algo", algo]
         for k, v in params.items():
             args += [f"--{k.lower().replace(' ', '_')}", v]
 
@@ -205,6 +163,7 @@ class App:
             self.root.update()
 
             # Ejecutar el algoritmo
+            print(f"[Ejecucion] - {args}")
             result = subprocess.run(args, capture_output=True, text=True, check=True)
 
             self.root.config(cursor="")
@@ -224,7 +183,7 @@ class App:
 
         except FileNotFoundError:
             self.root.config(cursor="")
-            messagebox.showerror("Archivo no encontrado", f"No se encontró el ejecutable en la ruta: {exec_path}")
+            messagebox.showerror("Archivo no encontrado", f"No se encontró el ejecutable en la ruta: {algorithm_executable_path}")
 
     def show_result_screen(self):
         if self.result_frame:
@@ -238,8 +197,8 @@ class App:
         btn_volver.place(relx=1.0, x=-10, y=10, anchor="ne")
 
         try:
-            df = pd.read_csv(os.path.join(repository_path, "output/output_dispatches.csv"))
-            metadata_df = pd.read_csv(os.path.join(repository_path, "output/output_result_metadata.csv"))
+            df = pd.read_csv(output_dispatches_path)
+            metadata_df = pd.read_csv(output_metadata_path)
             metadata = metadata_df.to_dict(orient="records")[0]
 
             grouped = df.groupby("dispatch_id")
@@ -269,7 +228,7 @@ class App:
                 if algo == "SA-GA":
                     current_args = saga_args
                 elif algo == "GRASP":
-                    current_args = grasp_arg
+                    current_args = grasp_args
                 else:
                     raise ValueError("Algoritmo desconocido")
                 
@@ -359,7 +318,6 @@ class App:
 
         self.result_frame.pack(fill="both", expand=True)
         self.hide_main_screen()
-
 
     def back_to_main(self):
         if self.result_frame:
