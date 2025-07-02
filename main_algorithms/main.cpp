@@ -78,13 +78,15 @@ vector<double> parseAlphaSet(const string& input) {
 
 
 int main(int argc, char** argv) {
+    std::srand(std::time(nullptr));
+
     auto args = parseArgs(argc, argv);
     bool debug = false;
     
-    string algorithmToRun = "SA-GA";
+    string algorithmToRun = "GRASP";
     
     string repositoryPath = "C:/main/university/semesters/CICLO XII/TESIS2/transport-load-optimizer";
-    string inputPath = repositoryPath + "/input/input_test_small.txt";
+    string inputPath = repositoryPath + "/input/input_large.txt";
     string outputDispatchesPath = repositoryPath + "/output/output_dispatches.csv";
     string outputMetadataPath = repositoryPath + "/output/output_result_metadata.csv";
    
@@ -97,14 +99,14 @@ int main(int argc, char** argv) {
     
     // GRASP Params
     int graspIterations = 100;
-    double Kpercent = 20;
-    vector<double> alphaSet = {0.1, 0.5};
+    double Kpercent = 70;
+    vector<double> alphaSet = {0.1, 0.5, 0.9};
     
     int unloadingTime = 20;
     int timeSlotInterval = 30;
     
     // Parameter configuration with execution arguments
-    
+    ///*
     algorithmToRun = args["algo"];
     inputPath = args["input"];
     if (algorithmToRun == "SA-GA") {
@@ -146,6 +148,7 @@ int main(int argc, char** argv) {
     } else {
         throw runtime_error("Missing --algo parameter.");
     }
+    //*/
     
     Input input;
     input.loadFromFile(inputPath);
