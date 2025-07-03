@@ -3,16 +3,16 @@ from datetime import datetime, timedelta
 
 random.seed(42)
 
-NUM_CLIENTS = 20
-NUM_BLOCKS = 300
-NUM_VEHICLES = 8
-NUM_ORDERS = 100
-MAX_DELIVERIES_PER_ORDER = 3
-MAX_BLOCKS_PER_DELIVERY = 5
-NUM_ROUTES = 6
-TODAY = datetime(2024, 9, 21)
-END_DATE = datetime(2024, 9, 21)
-OUTPUT_FILE = "C:/main/university/semesters/CICLO XII/TESIS2/transport-load-optimizer/input/input_sameBlocks.txt"
+NUM_CLIENTS = [8, 16]
+NUM_BLOCKS = 1000
+NUM_VEHICLES = [10, 20]
+NUM_ORDERS = [50, 150]
+DELIVERIES_PER_ORDER = [1, 4]
+BLOCKS_PER_DELIVERY = [1, 5]
+NUM_ROUTES = 10
+TODAY = datetime(2025, 7, 2)
+END_DATE = datetime(2025, 7, 4)
+OUTPUT_FILE = "C:/main/university/semesters/CICLO XII/TESIS2/transport-load-optimizer/input/input_test23.txt"
 
 def generate_random_date(start_date, end_date):
     delta = end_date - start_date
@@ -24,7 +24,7 @@ def generate_random_date(start_date, end_date):
     return (start_date + timedelta(days=random_days)).strftime("%Y-%m-%d")
 
 def generate_clients():
-    return [(i + 1, f"Client {i + 1}") for i in range(NUM_CLIENTS)]
+    return [(i + 1, f"Client {i + 1}") for i in range(random.randint(NUM_CLIENTS[0], NUM_CLIENTS[1]))]
 
 def generate_blocks():
     blocks = []
@@ -39,7 +39,7 @@ def generate_blocks():
 
 def generate_vehicles():
     vehicles = []
-    for i in range(1, NUM_VEHICLES + 1):
+    for i in range(1, random.randint(NUM_VEHICLES[0], NUM_VEHICLES[1]) + 1):
         h = round(random.uniform(2.0, 3.0), 2)
         w = round(random.uniform(2.0, 2.5), 2)
         l = round(random.uniform(5.0, 7.0), 2)
@@ -83,11 +83,11 @@ def generate_orders(clients, available_blocks):
     used_blocks = set()
     delivery_id_counter = 1
     block_idx = 0
-    for order_id in range(1, NUM_ORDERS + 1):
+    for order_id in range(1, random.randint(NUM_ORDERS[0], NUM_ORDERS[1]) + 1):
         client = random.choice(clients[1:])  # avoid dispatch center
         client_id = client[0]
         priority = random.randint(1, 10)
-        num_deliveries = random.randint(1, MAX_DELIVERIES_PER_ORDER)
+        num_deliveries = random.randint(DELIVERIES_PER_ORDER[0], DELIVERIES_PER_ORDER[1])
         deliveries = []
 
         for _ in range(num_deliveries):
@@ -97,7 +97,7 @@ def generate_orders(clients, available_blocks):
             end = END_DATE
             due_date = generate_random_date(start, end)
 
-            num_blocks = random.randint(1, MAX_BLOCKS_PER_DELIVERY)
+            num_blocks = random.randint(BLOCKS_PER_DELIVERY[0], BLOCKS_PER_DELIVERY[1])
             blocks = []
 
             for _ in range(num_blocks):
