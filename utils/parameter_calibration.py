@@ -28,7 +28,7 @@ if len(sys.argv) != 2:
 
 algo = sys.argv[1]
 nIterations = 10  # Cantidad de iteraciones a realizar
-inputPath = os.path.join(input_folder_path, "input_large.txt")
+inputPath = os.path.join(input_folder_path, 'used_tests', "calibration_test.txt")
 saga_param_grid = {
     "population": [50, 100],
     "mutation_rate": [0.2, 0.5, 0.8],
@@ -37,8 +37,8 @@ saga_param_grid = {
     "alpha": [0.5, 0.9]
 }
 grasp_param_grid = {
-    "iterations": [100, 300, 500, 700],
-    "k_percent": [15, 30, 45, 60],
+    "iterations": [100, 300, 500, 700, 900],
+    "k_percent": [15, 30, 45, 60, 75],
     "alphas": ["0.1,0.5,0.9"]
 }
 
@@ -59,7 +59,7 @@ result = []
 for i, combo in enumerate(combinations, start=1):
     currentParams = { keys[j]: combo[j] for j in range(len(keys)) }
     paramString = ", ".join([f"{k}={v}" for k, v in currentParams.items()])
-    data.append((i, currentParams))
+    data.append((i, paramString))
 
     print(f"[Configuración] - ID: {i}/{len(combinations)}, Parámetros: {paramString}")
 
