@@ -15,17 +15,17 @@ saga_args = [
     {
         "nombreParametro": "Población",
         "nombreVariable": "population",
-        "defaultValue": "70",
+        "defaultValue": "100",
     },
     {
         "nombreParametro": "Tasa de mutación",
         "nombreVariable": "mutation_rate",
-        "defaultValue": "0.4",
+        "defaultValue": "0.2",
     },
     {
         "nombreParametro": "Temperatura inicial",
         "nombreVariable": "t_init",
-        "defaultValue": "50",
+        "defaultValue": "1000",
     },
     {
         "nombreParametro": "Temperatura mínima",
@@ -35,7 +35,7 @@ saga_args = [
     {
         "nombreParametro": "Factor enfriamiento",
         "nombreVariable": "alpha",
-        "defaultValue": "0.95",
+        "defaultValue": "0.9",
     },
 ]
 
@@ -43,16 +43,16 @@ grasp_args = [
     {
         "nombreParametro": "Numero de iteraciones",
         "nombreVariable": "iterations",
-        "defaultValue": "100",
+        "defaultValue": "700",
     },
     {
         "nombreParametro": "% de bloques por remover (K%)",
         "nombreVariable": "k_percent",
-        "defaultValue": "20",
+        "defaultValue": "30",
     },
     {
         "nombreParametro": "Alfas (coma separados)",
         "nombreVariable": "alphas",
-        "defaultValue": "0.1,0.5",
+        "defaultValue": "0.1,0.5,0.9",
     },
 ]
