@@ -78,6 +78,7 @@ vector<double> parseAlphaSet(const string& input) {
 
 
 int main(int argc, char** argv) {
+    cout << "=================================================" <<  endl;
     std::srand(std::time(nullptr));
 
     auto args = parseArgs(argc, argv);
@@ -152,9 +153,9 @@ int main(int argc, char** argv) {
     
     Input input;
     input.loadFromFile(inputPath);
-    input.printInputData();
+    //input.printInputData();
         
-    cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
+    //cout << endl << "=========MAIN PROGRAM =========" << endl << endl;
     
     GlobalExecutionTracker tracker;
     vector<Dispatch> finalDispatches;
@@ -337,7 +338,7 @@ int main(int argc, char** argv) {
     auto end = chrono::high_resolution_clock::now();  // Fin de medición de tiempo
     chrono::duration<double> algorithmTotalDuration = end - start;
     
-    
+    /*
     cout << endl << "=========== FINAL DISPATCH PLAN (" 
             << finalDispatches.size() 
             << ") ===========" << endl;
@@ -353,8 +354,9 @@ int main(int argc, char** argv) {
         cout << "Dispatch ID: " << disCounter << endl;
         d.printSummary();
     }
+    */
     
-    cout << endl << "======== FITNESS OF SOLUTION ==========" << endl;
+    cout << "======== FITNESS OF SOLUTION ==========" << endl;
     double solutionFitness = DispatchUtils::evaluateDispatchesFitness(finalDispatches, deliveries, allVehicles);
     cout << solutionFitness << endl;
     
@@ -370,8 +372,7 @@ int main(int argc, char** argv) {
     );
     
     
-    cout << endl << "=========== DELIVERIES NOT ATTENDED ===========" 
-            << endl;
+    cout << "=========== DELIVERIES NOT ATTENDED ===========" << endl;
     vector<int> unfulfilled = tracker.getUnfulfilledDeliveryIds(deliveries);
     if (unfulfilled.empty()) {
         cout << " All deliveries were dispatched." << endl;
@@ -380,6 +381,8 @@ int main(int argc, char** argv) {
             cout << "Delivery not dispatched → ID: " << id << endl;
         }
     }
+    
+    cout << "=================================================" <<  endl;
     
     return 0;
 }
