@@ -65,17 +65,17 @@ SubProceso evaluarFitness(cromosoma)
     ratioPrioridad <- prioridadAtendida / prioridadTotal
     scoreVehiculos <- 1 - (tamaño de vehiculosUsados / total de vehículos disponibles)
 	
-    A <- 0.5  // Minimizar uso de vehículos
-    B <- 0.5  // Maximizar uso de espacio
-    C <- 1.0  // Penalización por sobrepeso
-    D <- 1.0  // Bonus por atender entregas
-    E <- 1.0  // Bonus por cubrir prioridades
+    A <- -5
+    B <- 30
+    C <- 70
+    D <- 5
+    E <- -1000
 	
     fitness <- A * scoreVehiculos 
 			+ B * promedioUtilización 
-			- C * penalizaciónPeso 
-			+ D * ratioEntregas 
-			+ E * ratioPrioridad
+			+ C * ratioEntregas
+			+ D * ratioPrioridad 
+			+ E * penalizaciónPeso
 	
     Retornar fitness
 FinSubProceso

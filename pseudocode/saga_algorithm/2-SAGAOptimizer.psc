@@ -1,4 +1,4 @@
-SubProceso SAGAOptimizer(deliveries, bloques, vehiculos, ruta, slot, T_init, T_min, alpha, N)
+SubProceso SAGAOptimizer(deliveries, bloques, vehiculos, ruta, slot, T_init, T_min, alpha, N, mutationRate)
 		Definir population como lista de Cromosomas
 		population <- generarPoblacionInicial(deliveries, bloques, vehiculos, ruta, slot, N)
 		Para cada cromosoma en population hacer
@@ -20,7 +20,7 @@ SubProceso SAGAOptimizer(deliveries, bloques, vehiculos, ruta, slot, T_init, T_m
 				padre1 <- seleccionarPadre(population)
 				padre2 <- seleccionarPadre(population)
 				hijo <- crossover(padre1, padre2)
-				mutar(hijo)
+				mutar(hijo, mutationRate)
 				asignarFitness(hijo, evaluarFitness(hijo))
 				
 				delta <- fitness de padre1 - fitness de hijo

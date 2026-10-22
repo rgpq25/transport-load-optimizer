@@ -25,7 +25,7 @@ paramEntries = {
     "k_percent": 30,
     "alphas": "0.1,0.5,0.9"
 }
-nIterations = 20
+nIterations = 30
 
 # === FUNCIONES AUXILIARES ===
 def run_algorithm(input_path, algo, param_entries):
