@@ -39,6 +39,63 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
     double bestFitnessGlobal = -numeric_limits<double>::infinity();
     int iterationCount = 1;
 
+    // [TRACE] Archivos de la traza
+    bool trace = !traceDir.empty();
+    ofstream traceVehicles, traceIterations, traceLayers, traceLocalSearch;
+    int vehicleStep = 0;
+    double traceBestGlobal = -numeric_limits<double>::infinity();
+    if (trace) {
+        TraceUtils::openTraceFile(traceVehicles, traceDir, "grasp_vehicle_selection.csv",
+            "run_id,step,pending_deliveries,target_volume,vehicle_id,vehicle_volume,difference,selected");
+        TraceUtils::openTraceFile(traceIterations, traceDir, "grasp_iterations.csv",
+            "run_id,vehicle_id,iteration,phase,deliveries,layers,pattern_weight,max_weight,fitness," +
+            TraceUtils::breakdownHeader() + ",best_vehicle_fitness_before,new_best,best_fitness_global,duration_s");
+        TraceUtils::openTraceFile(traceLayers, traceDir, "grasp_layers.csv",
+            "run_id,vehicle_id,iteration,phase,step,space_x,space_y,space_z,space_length,space_width,space_height,"
+            "spaces_left,candidates,alpha,rcl_size,event,delivery_id,blocks,orientation,layer_length,layer_width,"
+            "layer_height,layer_volume,layer_weight,pattern_weight,new_spaces");
+        TraceUtils::openTraceFile(traceLocalSearch, traceDir, "grasp_local_search.csv",
+            "run_id,vehicle_id,iteration,total_blocks,k_percent,blocks_to_remove,removed_deliveries,removed_blocks");
+    }
+
+    // [TRACE] Peso real de un patrón (suma de los bloques de sus capas)
+    auto patternWeight = [](const VehiclePattern& p) {
+        double w = 0.0;
+        for (const auto& layer : p.layers) for (auto* b : layer.blocks) w += b->getWeight();
+        return w;
+    };
+
+    // [TRACE] Una fila por cada paso de construcción (capa colocada o fin de la construcción)
+    auto logLayer = [&](int vehicleId, int iteration, const string& phase, int step, const MaximalSpace& e,
+                        size_t spacesLeft, int candidates, double alpha, int rclSize, const string& event,
+                        const LayerCandidate* sp, const VehiclePattern& pattern, int newSpaces) {
+        traceLayers << runId << "," << vehicleId << "," << iteration << "," << phase << "," << step << ","
+                    << e.originX << "," << e.originY << "," << e.originZ << ","
+                    << e.length << "," << e.width << "," << e.height << ","
+                    << spacesLeft << "," << candidates << ",";
+        if (alpha >= 0) traceLayers << alpha;
+        traceLayers << ",";
+        if (rclSize >= 0) traceLayers << rclSize;
+        traceLayers << "," << event << ",";
+        if (sp != nullptr) {
+            double w = 0.0;
+            string blockIds;
+            for (auto* b : sp->blocks) {
+                w += b->getWeight();
+                blockIds += (blockIds.empty() ? "" : " ") + to_string(b->getId());
+            }
+            traceLayers << sp->delivery->getId() << "," << blockIds << ","
+                        << (sp->orientations.empty() ? 0 : sp->orientations[0]) << ","
+                        << sp->footprintLength << "," << sp->footprintWidth << "," << sp->layerHeight << ","
+                        << sp->volume << "," << w << ",";
+        } else {
+            traceLayers << ",,,,,,,,";
+        }
+        traceLayers << patternWeight(pattern) << ",";
+        if (newSpaces >= 0) traceLayers << newSpaces;
+        traceLayers << "\n";
+    };
+
     // Mientras haya entregas y vehículos disponibles
     while (!LPveh.empty() && !Vveh.empty()) {
         
@@ -63,6 +120,17 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
         }
         TransportUnit* ve = Vveh[veIndex];
 
+        // [TRACE] Selección de la unidad de transporte
+        if (trace) {
+            vehicleStep++;
+            for (size_t i = 0; i < Vveh.size(); ++i) {
+                traceVehicles << runId << "," << vehicleStep << "," << LPveh.size() << "," << targetVolume << ","
+                              << Vveh[i]->getId() << "," << Vveh[i]->getVolume() << ","
+                              << abs(Vveh[i]->getVolume() - targetVolume) << ","
+                              << ((int)i == veIndex ? 1 : 0) << "\n";
+            }
+        }
+
         // 2. Inicialización de BestVehiclePattern y flag de fase
         VehiclePattern BestVehiclePattern;
         BestVehiclePattern.vehicle = ve;
@@ -85,11 +153,15 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
             VehiclePattern CurrentPattern;
             CurrentPattern.vehicle = ve;
 
+            string tracePhase = localsearch ? "local_search" : "construction";  // [TRACE]
+            int traceStep = 0;                                                  // [TRACE]
+
             // 4.2 Construcción iterativa de capas
             while (!LPcopy.empty() && !E.empty()) {
                 int eIdx = std::rand() % static_cast<int>(E.size());
                 MaximalSpace e = E[eIdx];
                 E.erase(E.begin() + eIdx);
+                traceStep++;
 
                 // Generar capas candidatas para cada delivery pendiente
                 vector<LayerCandidate> layers;
@@ -97,15 +169,22 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                     auto cand = generateLayers(e, d);
                     layers.insert(layers.end(), cand.begin(), cand.end());
                 }
-                if (layers.empty()) break;
-                
+                if (layers.empty()) {
+                    if (trace) logLayer(ve->getId(), iterationCount, tracePhase, traceStep, e, E.size(), 0, -1, -1,
+                                        "no_candidates_stop", nullptr, CurrentPattern, -1);
+                    break;
+                }
+
                 std::random_shuffle(layers.begin(), layers.end());
 
                 // Selección de la capa a colocar
                 LayerCandidate sp;
+                double traceAlpha = -1.0;   // [TRACE]
+                int traceRclSize = -1;      // [TRACE]
                 if (!localsearch) {
                     double alpha = alphaTuner.pick();
                     auto rcl = buildRCL(layers, alpha);
+                    traceAlpha = alpha;
                     
                     // Antes de escoger, filtrar en la RCL aquellas que superarían el peso
                     rcl.erase(std::remove_if(rcl.begin(), rcl.end(),
@@ -117,8 +196,13 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                             );
                         }),
                         rcl.end());
-                    if (rcl.empty()) break;
-                        
+                    if (rcl.empty()) {
+                        if (trace) logLayer(ve->getId(), iterationCount, tracePhase, traceStep, e, E.size(),
+                                            (int)layers.size(), traceAlpha, 0, "empty_rcl_stop", nullptr, CurrentPattern, -1);
+                        break;
+                    }
+                    traceRclSize = (int)rcl.size();
+
                     int idx = rand() % static_cast<int>(rcl.size());
                     sp = rcl[idx];
                 } else {
@@ -132,8 +216,12 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                             );
                         }),
                         layers.end());
-                    if (layers.empty()) break;
-                        
+                    if (layers.empty()) {
+                        if (trace) logLayer(ve->getId(), iterationCount, tracePhase, traceStep, e, E.size(), 0, -1, -1,
+                                            "no_candidates_stop", nullptr, CurrentPattern, -1);
+                        break;
+                    }
+
                     sp = selectBestFit(layers);
                 }
                 
@@ -148,6 +236,10 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                 locateLayer(sp, e, newSpaces);
                 E.insert(E.end(), newSpaces.begin(), newSpaces.end());
 
+                if (trace) logLayer(ve->getId(), iterationCount, tracePhase, traceStep, e, E.size() - newSpaces.size(),
+                                    (int)layers.size(), traceAlpha, traceRclSize,
+                                    localsearch ? "best_fit_layer" : "rcl_layer", &sp, CurrentPattern, (int)newSpaces.size());
+
                 // Eliminar el delivery completo de LPcopy
                 LPcopy.erase(
                     remove(LPcopy.begin(), LPcopy.end(), sp.delivery),
@@ -158,28 +250,49 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
             // 4.3 Fase de mejora local: remover K% de bloques
             if (localsearch && !CurrentPattern.layers.empty()) {
                 // Eliminar K% y obtener las capas quitadas
+                int traceTotalBlocks = 0;   // [TRACE]
+                for (auto& layer : CurrentPattern.layers) traceTotalBlocks += (int)layer.blocks.size();
                 auto removed = removeKPercent(CurrentPattern);
-                
+
+                // [TRACE] Capas removidas por la mejora local
+                if (trace) {
+                    string removedDeliveries;
+                    int removedBlocks = 0;
+                    for (auto& layer : removed) {
+                        removedDeliveries += (removedDeliveries.empty() ? "" : " ") + to_string(layer.delivery->getId());
+                        removedBlocks += (int)layer.blocks.size();
+                    }
+                    traceLocalSearch << runId << "," << ve->getId() << "," << iterationCount << ","
+                                     << traceTotalBlocks << "," << K << ","
+                                     << (int)std::ceil(traceTotalBlocks * (K / 100.0)) << ","
+                                     << removedDeliveries << "," << removedBlocks << "\n";
+                }
+
                 // Reintegrar sus deliveries a LPcopy
                 for (auto& layer : removed) {
                     LPcopy.push_back(layer.delivery);
                 }
-                
+
                 // Regenerar espacios para reintentarlo
                 E = generateInitialSpaces(ve);
-                
+
                 // Reinsertar las capas con las entregas eliminadas
                 while (!LPcopy.empty() && !E.empty()) {
                     int eIdx = std::rand() % static_cast<int>(E.size());
                     MaximalSpace e = E[eIdx];
                     E.erase(E.begin() + eIdx);
+                    traceStep++;
 
                     vector<LayerCandidate> layers;
                     for (auto* d : LPcopy) {
                         auto cand = generateLayers(e, d);
                         layers.insert(layers.end(), cand.begin(), cand.end());
                     }
-                    if (layers.empty()) break;
+                    if (layers.empty()) {
+                        if (trace) logLayer(ve->getId(), iterationCount, "reinsertion", traceStep, e, E.size(), 0, -1, -1,
+                                            "no_candidates_stop", nullptr, CurrentPattern, -1);
+                        break;
+                    }
 
                     // Filtro por peso
                     layers.erase(std::remove_if(layers.begin(), layers.end(),
@@ -190,7 +303,11 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                                     CurrentPattern.currentWeight + w < ve->getMinWeight());
                         }),
                         layers.end());
-                    if (layers.empty()) break;
+                    if (layers.empty()) {
+                        if (trace) logLayer(ve->getId(), iterationCount, "reinsertion", traceStep, e, E.size(), 0, -1, -1,
+                                            "no_candidates_stop", nullptr, CurrentPattern, -1);
+                        break;
+                    }
 
                     LayerCandidate sp = selectBestFit(layers);
 
@@ -203,6 +320,9 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                     locateLayer(sp, e, newSpaces);
                     E.insert(E.end(), newSpaces.begin(), newSpaces.end());
 
+                    if (trace) logLayer(ve->getId(), iterationCount, "reinsertion", traceStep, e, E.size() - newSpaces.size(),
+                                        (int)layers.size(), -1, -1, "best_fit_layer", &sp, CurrentPattern, (int)newSpaces.size());
+
                     LPcopy.erase(remove(LPcopy.begin(), LPcopy.end(), sp.delivery), LPcopy.end());
                 }
             }
@@ -214,12 +334,30 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
                 BestVehiclePattern = CurrentPattern;
             }
 
+            // [TRACE] Resumen de la iteración
+            if (trace) {
+                FitnessBreakdown bd;
+                evaluateSolutionFitness({CurrentPattern}, &bd);
+                string deliveryIds;
+                for (auto& layer : CurrentPattern.layers) {
+                    deliveryIds += (deliveryIds.empty() ? "" : " ") + to_string(layer.delivery->getId());
+                }
+                traceIterations << runId << "," << ve->getId() << "," << iterationCount << "," << tracePhase << ","
+                                << deliveryIds << "," << CurrentPattern.layers.size() << ","
+                                << patternWeight(CurrentPattern) << "," << ve->getMaxWeight() << ","
+                                << fitCurr << "," << TraceUtils::breakdownToCSV(bd) << ","
+                                << fitBest << "," << (fitCurr > fitBest ? 1 : 0) << ",";
+                traceBestGlobal = max(traceBestGlobal, fitCurr);
+                traceIterations << traceBestGlobal << ",";   // la duración se completa al final de la iteración
+            }
+
             // Alternar entre fase constructiva y mejora local
             localsearch = !localsearch;
             
             auto end = chrono::high_resolution_clock::now();  // Tiempo fin
             chrono::duration<double> duration = end - start;
-            
+            if (trace) traceIterations << duration.count() << "\n";  // [TRACE]
+
             // === Registro de datos
             if (debug == true) {
                 if (fitCurr > bestFitnessGlobal) {
@@ -256,7 +394,19 @@ vector<VehiclePattern> GRASPOptimizer::run(bool debug) {
         debugFile.close();
     }
 
+    if (trace) {
+        traceVehicles.close();
+        traceIterations.close();
+        traceLayers.close();
+        traceLocalSearch.close();
+    }
+
     return LoadingTruck;
+}
+
+void GRASPOptimizer::setTrace(const string& traceDir, const string& runId) {
+    this->traceDir = traceDir;
+    this->runId = runId;
 }
 
 vector<MaximalSpace> GRASPOptimizer::generateInitialSpaces(TransportUnit* truck) {
@@ -417,7 +567,7 @@ vector<LayerCandidate> GRASPOptimizer::removeKPercent(VehiclePattern& pattern) {
     return removedLayers;
 }
 
-double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& patterns) const {
+double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& patterns, FitnessBreakdown* breakdown) const {
     unordered_map<int, vector<Block*>> vehicleBlocks;
     unordered_map<int, double> vehicleVolumeUsed;
     unordered_map<int, double> vehicleWeightUsed;
@@ -460,6 +610,7 @@ double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& pat
                 vehicleWeightUsed[vIdx] += b->getWeight();
                 
                 if (!bin.tryPlaceBlock(b, layer.orientations[i])) {
+                    if (breakdown != nullptr) breakdown->feasible3D = false;
                     return -9999999;
                 }
             }
@@ -492,6 +643,20 @@ double GRASPOptimizer::evaluateSolutionFitness(const vector<VehiclePattern>& pat
     double avgUtilization   = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore * 100 / numDeliveriesAssigned;
     double fulfillmentRatio = LP.empty() ? 0.0 : (double)numDeliveriesAssigned * 100 / LP.size();
     double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority * 100 / totalPriority;
+
+    if (breakdown != nullptr) {
+        breakdown->dispatchesCount = patterns.size();
+        breakdown->avgUtilization = avgUtilization;
+        breakdown->fulfillmentRatio = fulfillmentRatio;
+        breakdown->priorityCoverage = priorityCoverage;
+        breakdown->overcapacityPenalty = overcapacityPenalty;
+        ostringstream ss;
+        for (int vIdx : usedVehicles) {
+            if (!ss.str().empty()) ss << ";";
+            ss << "UT" << V[vIdx]->getId() << "=" << vehicleWeightUsed.at(vIdx) << "/" << V[vIdx]->getMaxWeight();
+        }
+        breakdown->weightByVehicle = ss.str();
+    }
 
     return DispatchUtils::getObjectiveFunction(
         patterns.size(), 

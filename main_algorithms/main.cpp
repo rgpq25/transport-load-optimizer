@@ -15,6 +15,7 @@
 
 #include "globalExecutionTracker.h"
 #include "deliveryUtils.h"
+#include "traceUtils.h"
 #include "timeSlotUtils.h"
 #include "dispatchUtils.h"
 
@@ -150,6 +151,20 @@ int main(int argc, char** argv) {
         throw runtime_error("Missing --algo parameter.");
     }
     //*/
+
+    // Optional arguments: iteration-by-iteration trace and fixed random seed
+    // (without them, the execution is the same as before)
+    string traceDir = args.count("trace") ? args["trace"] : "";
+    bool traceEnabled = !traceDir.empty();
+    bool hasSeed = args.count("seed") == 1;
+    if (hasSeed) {
+        std::srand(stoul(args["seed"]));
+        cout << "[INIT] - Fixed random seed = " << args["seed"] << endl;
+    }
+    if (traceEnabled) {
+        TraceUtils::resetTraceFiles(traceDir);
+        cout << "[INIT] - Trace enabled. Output folder = " << traceDir << endl;
+    }
     
     Input input;
     input.loadFromFile(inputPath);
@@ -270,7 +285,11 @@ int main(int argc, char** argv) {
                         
                         cout << "FINISHED PRINT ===================" << endl;
                     }
-                    
+
+                    // Identifier of this optimizer run for the trace files
+                    string runId = dueDate + "|R" + to_string(route.getId()) + "|" + shift + "|" +
+                                   ts.getStartAsString() + "-" + ts.getEndAsString();
+
                     if (algorithmToRun == "SA-GA") {
                         SAGAOptimizer optimizer(
                             finalDeliveries,
@@ -284,6 +303,8 @@ int main(int argc, char** argv) {
                             T_min, 
                             alpha
                         );
+                        if (hasSeed) optimizer.disableReseed();
+                        if (traceEnabled) optimizer.setTrace(traceDir, runId);
 
                         Chromosome best = optimizer.run(matchesSelected);
                         
@@ -310,6 +331,7 @@ int main(int argc, char** argv) {
                             Kpercent, 
                             alphaSet
                         );
+                        if (traceEnabled) optimizer.setTrace(traceDir, runId);
 
                         auto patterns = optimizer.run(matchesSelected);
 
@@ -370,7 +392,13 @@ int main(int argc, char** argv) {
         algorithmTotalDuration.count(),
         outputMetadataPath
     );
-    
+
+    // Copy of the results next to the trace files
+    if (traceEnabled) {
+        DispatchUtils::exportDispatchesToCSV(finalDispatches, traceDir + "/output_dispatches.csv");
+        DispatchUtils::exportResultMetadata(solutionFitness, algorithmTotalDuration.count(), traceDir + "/output_result_metadata.csv");
+    }
+
     
     cout << "=========== DELIVERIES NOT ATTENDED ===========" << endl;
     vector<int> unfulfilled = tracker.getUnfulfilledDeliveryIds(deliveries);

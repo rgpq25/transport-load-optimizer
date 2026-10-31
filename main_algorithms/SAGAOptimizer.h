@@ -22,6 +22,7 @@
 #include "timeSlot.h"
 
 #include "chromosome.h"
+#include "traceUtils.h"
 
 using namespace std;
 
@@ -39,6 +40,11 @@ private:
     int T_min;
     double alpha;
 
+    // Trace mode (disabled by default)
+    string traceDir;
+    string runId;
+    bool reseed = true;
+
 public:
     SAGAOptimizer(
         vector<Delivery*>& deliveries,
@@ -55,12 +61,18 @@ public:
 
     Chromosome run(bool printDebug); // runs the SA-GA loop and returns the best solution
 
+    void setTrace(const string& traceDir, const string& runId);
+    void disableReseed();   // keeps the global seed instead of reseeding with time(nullptr)
+
 private:
     vector<Chromosome> generateInitialPopulation();
-    double evaluateFitness(Chromosome& chromosome);
+    double evaluateFitness(Chromosome& chromosome, FitnessBreakdown* breakdown = nullptr);
     Chromosome crossover(const Chromosome& p1, const Chromosome& p2);
     void mutate(Chromosome& c);
-    Chromosome selectParent(const vector<Chromosome>& population);
+    Chromosome selectParent(const vector<Chromosome>& population, int* chosenIndex = nullptr);
+
+    string assignmentsToString(const Chromosome& c) const;
+    string orientationsToString(const Chromosome& c) const;
 };
 
 #endif /* SAGAOPTIMIZER_H */

@@ -13,6 +13,7 @@
 #include "vehiclePattern.h"
 #include "maximalSpace.h"
 #include "layerCandidate.h"
+#include "traceUtils.h"
 
 class GRASPOptimizer {
 public:
@@ -31,7 +32,14 @@ public:
     // Ejecuta todo el Algorithm 4 y devuelve patrones para cada vehículo
     vector<VehiclePattern> run(bool debug);
 
+    void setTrace(const string& traceDir, const string& runId);
+
 private:
+    // Modo de traza (desactivado por defecto)
+    string                        traceDir;
+    string                        runId;
+
+
     // Datos de entrada y parámetros
     vector<Delivery*>        LP;
     vector<Block*>           allBlocks;
@@ -50,7 +58,7 @@ private:
     LayerCandidate              selectBestFit(const vector<LayerCandidate>& layers);
     void                        locateLayer(const LayerCandidate& sp, MaximalSpace& e, vector<MaximalSpace>& spacesOut);
     vector<LayerCandidate>      removeKPercent(VehiclePattern& pattern);
-    double evaluateSolutionFitness(const vector<VehiclePattern>& patterns) const;
+    double evaluateSolutionFitness(const vector<VehiclePattern>& patterns, FitnessBreakdown* breakdown = nullptr) const;
 };
 
 #endif /* GRASPOPTIMIZER_H */

@@ -55,6 +55,39 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
         }
     }
 
+    // [TRACE] Initial population (generation 0)
+    bool trace = !traceDir.empty();
+    ofstream traceCrossovers, traceGenerations;
+    if (trace) {
+        ofstream tracePopulation;
+        TraceUtils::openTraceFile(tracePopulation, traceDir, "saga_population.csv",
+            "run_id,chromosome,assignments,orientations,fitness," + TraceUtils::breakdownHeader());
+        double sumInitial = 0.0;
+        for (size_t idx = 0; idx < population.size(); ++idx) {
+            Chromosome copy = population[idx];
+            FitnessBreakdown bd;
+            evaluateFitness(copy, &bd);
+            sumInitial += population[idx].getFitness();
+            tracePopulation << runId << "," << idx << ","
+                            << assignmentsToString(population[idx]) << ","
+                            << orientationsToString(population[idx]) << ","
+                            << population[idx].getFitness() << ","
+                            << TraceUtils::breakdownToCSV(bd) << "\n";
+        }
+        tracePopulation.close();
+
+        TraceUtils::openTraceFile(traceGenerations, traceDir, "saga_generations.csv",
+            "run_id,generation,temperature,avg_fitness,best_fitness_population,best_fitness_global,duration_s");
+        traceGenerations << runId << ",0,," << sumInitial / population.size() << ","
+                         << best.getFitness() << "," << best.getFitness() << ",\n";
+
+        TraceUtils::openTraceFile(traceCrossovers, traceDir, "saga_crossovers.csv",
+            "run_id,generation,temperature,crossover,parent1_index,parent1_fitness,parent2_index,parent2_fitness,"
+            "child_assignments_before_mutation,child_orientations_before_mutation,"
+            "child_assignments,child_orientations,mutated_genes,child_fitness," + TraceUtils::breakdownHeader() + ","
+            "delta,acceptance_probability,random_value,decision,fitness_in_new_population");
+    }
+
     // 3. Simulated Annealing loop
     double T = T_init;
 
@@ -76,10 +109,13 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
         double bestFitnessInPopulation = population[0].getFitness();
 
         for (int i = 0; i < populationSize; ++i) {
-            Chromosome parent1 = selectParent(population);
-            Chromosome parent2 = selectParent(population);
+            int parent1Index = -1, parent2Index = -1;   // [TRACE]
+            Chromosome parent1 = selectParent(population, trace ? &parent1Index : nullptr);
+            Chromosome parent2 = selectParent(population, trace ? &parent2Index : nullptr);
 
             Chromosome child = crossover(parent1, parent2);
+            Chromosome childBeforeMutation;             // [TRACE]
+            if (trace) childBeforeMutation = child;
             mutate(child);
             child.setFitness(evaluateFitness(child));
             
@@ -96,23 +132,59 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
             
             // Apply acceptance criteria (Simulated Annealing)
             double delta = parent1.getFitness() - childFitness;
+            double traceProb = -1.0, traceRand = -1.0;  // [TRACE]
+            string traceDecision;                       // [TRACE]
 
             if (delta < 0) {
                 newPopulation.push_back(child);
                 sumFitness += child.getFitness();
+                traceDecision = "child_improves";
             } else {
                 double prob = exp(-delta / T);
                 double randVal = (double)rand() / RAND_MAX;
+                traceProb = prob;
+                traceRand = randVal;
 
                 if (randVal < prob) {
                     newPopulation.push_back(child);
                     sumFitness += child.getFitness();
+                    traceDecision = "child_accepted_by_sa";
                 } else {
                     newPopulation.push_back(parent1);
                     sumFitness += parent1.getFitness();
+                    traceDecision = "parent1_kept";
                 }
             }
-            
+
+            // [TRACE] Detail of this crossover
+            if (trace) {
+                int mutatedGenes = 0;
+                const vector<int>& aBefore = childBeforeMutation.getDeliveryAssignments();
+                const vector<int>& aAfter = child.getDeliveryAssignments();
+                const vector<int>& oBefore = childBeforeMutation.getBoxOrientations();
+                const vector<int>& oAfter = child.getBoxOrientations();
+                for (size_t g = 0; g < aAfter.size(); ++g) if (aBefore[g] != aAfter[g]) mutatedGenes++;
+                for (size_t g = 0; g < oAfter.size(); ++g) if (oBefore[g] != oAfter[g]) mutatedGenes++;
+
+                Chromosome copy = child;
+                FitnessBreakdown bd;
+                evaluateFitness(copy, &bd);
+
+                traceCrossovers << runId << "," << iterationIndex + 1 << "," << T << "," << i << ","
+                                << parent1Index << "," << parent1.getFitness() << ","
+                                << parent2Index << "," << parent2.getFitness() << ","
+                                << assignmentsToString(childBeforeMutation) << ","
+                                << orientationsToString(childBeforeMutation) << ","
+                                << assignmentsToString(child) << ","
+                                << orientationsToString(child) << ","
+                                << mutatedGenes << "," << childFitness << ","
+                                << TraceUtils::breakdownToCSV(bd) << ","
+                                << delta << ",";
+                if (traceProb >= 0) traceCrossovers << traceProb << "," << traceRand;
+                else traceCrossovers << ",";
+                traceCrossovers << "," << traceDecision << "," << newPopulation.back().getFitness() << "\n";
+            }
+
             // Update best solution
             if (child.getFitness() > best.getFitness()) {
                 best = child;
@@ -130,7 +202,15 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
                  << best.getFitness() << ","
                  << duration.count() << "\n";
         }
-        
+
+        // [TRACE] Summary of every generation
+        if (trace) {
+            traceGenerations << runId << "," << iterationIndex + 1 << "," << T << ","
+                             << sumFitness / populationSize << ","
+                             << bestFitnessInPopulation << ","
+                             << best.getFitness() << ","
+                             << duration.count() << "\n";
+        }
 
         population = newPopulation;
         T = T * alpha;
@@ -141,7 +221,56 @@ Chromosome SAGAOptimizer::run(bool printDebug) {
         debugFile.close();
     }
 
+    // [TRACE] Best chromosome of the run
+    if (trace) {
+        traceGenerations.close();
+        traceCrossovers.close();
+
+        ofstream traceBest;
+        TraceUtils::openTraceFile(traceBest, traceDir, "saga_best.csv",
+            "run_id,assignments,orientations,fitness," + TraceUtils::breakdownHeader());
+        Chromosome copy = best;
+        FitnessBreakdown bd;
+        evaluateFitness(copy, &bd);
+        traceBest << runId << "," << assignmentsToString(best) << "," << orientationsToString(best) << ","
+                  << best.getFitness() << "," << TraceUtils::breakdownToCSV(bd) << "\n";
+        traceBest.close();
+    }
+
     return best;
+}
+
+
+void SAGAOptimizer::setTrace(const string& traceDir, const string& runId) {
+    this->traceDir = traceDir;
+    this->runId = runId;
+}
+
+
+void SAGAOptimizer::disableReseed() {
+    this->reseed = false;
+}
+
+
+// "E<id entrega>:UT<id unidad>" separated by spaces; "-" when the delivery is not assigned
+string SAGAOptimizer::assignmentsToString(const Chromosome& c) const {
+    const vector<int>& assignments = c.getDeliveryAssignments();
+    ostringstream ss;
+    for (size_t i = 0; i < assignments.size(); ++i) {
+        if (i > 0) ss << " ";
+        ss << "E" << deliveries[i]->getId() << ":";
+        if (assignments[i] < 0 || assignments[i] >= (int)vehicles.size()) ss << "-";
+        else ss << "UT" << vehicles[assignments[i]]->getId();
+    }
+    return ss.str();
+}
+
+
+// One digit (0/1) per block, in the order of the blocks of the subproblem
+string SAGAOptimizer::orientationsToString(const Chromosome& c) const {
+    ostringstream ss;
+    for (int o : c.getBoxOrientations()) ss << o;
+    return ss.str();
 }
 
 
@@ -153,7 +282,7 @@ vector<Chromosome> SAGAOptimizer::generateInitialPopulation() {
     int numBlocks = blocks.size();
     int numVehicles = vehicles.size();
 
-    srand(time(nullptr)); // Seed RNG once
+    if (reseed) srand(time(nullptr)); // Seed RNG once (skipped when a fixed seed is used)
 
     for (int i = 0; i < populationSize; ++i) {
         // --- 1. Random delivery-to-vehicle assignment ---
@@ -181,7 +310,7 @@ vector<Chromosome> SAGAOptimizer::generateInitialPopulation() {
 
 
 
-double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
+double SAGAOptimizer::evaluateFitness(Chromosome& chromosome, FitnessBreakdown* breakdown) {
     const vector<int>& deliveryAssignments = chromosome.getDeliveryAssignments();
 
     // Map vehicle index → blocks assigned to it
@@ -231,6 +360,7 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
         
         for (size_t i = 0; i < blocksForVehicle.size(); ++i) {
             if (!bin.tryPlaceBlock(blocksForVehicle[i], orientationsForVehicle[i])) {
+                if (breakdown != nullptr) breakdown->feasible3D = false;
                 return -9999999;
             }
         }
@@ -269,7 +399,22 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
     double avgUtilization = numDeliveriesAssigned == 0 ? 0.0 : totalUtilizationScore * 100 / numDeliveriesAssigned;
     double fulfillmentRatio = deliveries.empty() ? 0.0 : (double)numDeliveriesAssigned * 100 / deliveries.size();
     double priorityCoverage = totalPriority == 0 ? 0.0 : (double)attendedPriority * 100 / totalPriority;
-    
+
+    if (breakdown != nullptr) {
+        breakdown->dispatchesCount = dispatchesCount;
+        breakdown->avgUtilization = avgUtilization;
+        breakdown->fulfillmentRatio = fulfillmentRatio;
+        breakdown->priorityCoverage = priorityCoverage;
+        breakdown->overcapacityPenalty = overcapacityPenalty;
+        ostringstream ss;
+        for (size_t v = 0; v < vehicles.size(); ++v) {
+            if (!usedVehicles.count(v)) continue;
+            if (!ss.str().empty()) ss << ";";
+            ss << "UT" << vehicles[v]->getId() << "=" << vehicleWeightUsed[v] << "/" << vehicles[v]->getMaxWeight();
+        }
+        breakdown->weightByVehicle = ss.str();
+    }
+
     return DispatchUtils::getObjectiveFunction(
         dispatchesCount, 
         avgUtilization, 
@@ -281,17 +426,21 @@ double SAGAOptimizer::evaluateFitness(Chromosome& chromosome) {
 
 
 
-Chromosome SAGAOptimizer::selectParent(const vector<Chromosome>& population) {
+Chromosome SAGAOptimizer::selectParent(const vector<Chromosome>& population, int* chosenIndex) {
     int tournamentSize = 3;
-    Chromosome best = population[rand() % population.size()];
+    int bestIndex = rand() % population.size();
+    Chromosome best = population[bestIndex];
 
     for (int i = 1; i < tournamentSize; ++i) {
-        Chromosome challenger = population[rand() % population.size()];
+        int challengerIndex = rand() % population.size();
+        Chromosome challenger = population[challengerIndex];
         if (challenger.getFitness() > best.getFitness()) {
             best = challenger;
+            bestIndex = challengerIndex;
         }
     }
 
+    if (chosenIndex != nullptr) *chosenIndex = bestIndex;
     return best;
 }
 
